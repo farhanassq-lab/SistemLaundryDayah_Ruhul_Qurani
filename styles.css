@@ -2022,3 +2022,525 @@ input, select, textarea { max-width: 100%; }
   #sidebar .nav-item, #sidebar .nav-icon { transition: none !important; }
   #sidebar .nav-item[data-view="input"]::after { animation: none !important; }
 }
+
+/* =========================================================
+   SILAS PREMIUM NOTIFICATION / TOAST
+   ========================================================= */
+
+:root{
+  --notif-success-bg: linear-gradient(135deg, #ecfff7 0%, #d9f8ea 100%);
+  --notif-success-border: #2f9e74;
+  --notif-success-text: #17664c;
+
+  --notif-error-bg: linear-gradient(135deg, #fff2f1 0%, #ffe0dc 100%);
+  --notif-error-border: #c2544d;
+  --notif-error-text: #8a2f2b;
+
+  --notif-warning-bg: linear-gradient(135deg, #fff8eb 0%, #ffe7bf 100%);
+  --notif-warning-border: #d4a038;
+  --notif-warning-text: #7d5a12;
+
+  --notif-info-bg: linear-gradient(135deg, #eef6ff 0%, #dcecff 100%);
+  --notif-info-border: #3f78c5;
+  --notif-info-text: #204d86;
+
+  --notif-shadow: 0 14px 34px rgba(20, 48, 78, 0.18);
+}
+
+/* stack tempat notif */
+.toast-stack{
+  position: fixed;
+  top: 84px;
+  right: 18px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(380px, calc(100vw - 24px));
+  pointer-events: none;
+}
+
+/* card notif */
+.toast-card{
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 52px 1fr 34px;
+  align-items: start;
+  gap: 12px;
+  padding: 14px 14px 14px 12px;
+  border-radius: 18px;
+  border: 1.5px solid transparent;
+  box-shadow: var(--notif-shadow);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: auto;
+  animation: toastIn .55s cubic-bezier(.2,.8,.2,1);
+}
+
+/* ikon bulat */
+.toast-icon{
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  font-weight: 800;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.65);
+}
+
+/* konten */
+.toast-body{
+  min-width: 0;
+}
+
+.toast-title{
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -.01em;
+}
+
+.toast-text{
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 600;
+  opacity: .96;
+  word-break: break-word;
+}
+
+/* tombol close */
+.toast-close{
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(255,255,255,.55);
+  color: #385777;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.toast-close:hover{
+  transform: scale(1.06);
+  background: rgba(255,255,255,.85);
+}
+
+/* garis progress */
+.toast-card::after{
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  width: 100%;
+  transform-origin: left center;
+  animation: toastProgress 4.8s linear forwards;
+}
+
+/* variasi */
+.toast-success{
+  background: var(--notif-success-bg);
+  border-color: rgba(47, 158, 116, .35);
+}
+.toast-success .toast-icon{
+  background: linear-gradient(135deg, #37b987, #218a67);
+  color: #fff;
+}
+.toast-success .toast-title,
+.toast-success .toast-text{
+  color: var(--notif-success-text);
+}
+.toast-success::after{
+  background: linear-gradient(90deg, #39b987, #8be3bb);
+}
+
+.toast-error{
+  background: var(--notif-error-bg);
+  border-color: rgba(194, 84, 77, .35);
+}
+.toast-error .toast-icon{
+  background: linear-gradient(135deg, #cb6158, #a73f3a);
+  color: #fff;
+}
+.toast-error .toast-title,
+.toast-error .toast-text{
+  color: var(--notif-error-text);
+}
+.toast-error::after{
+  background: linear-gradient(90deg, #c2544d, #f09f96);
+}
+
+.toast-warning{
+  background: var(--notif-warning-bg);
+  border-color: rgba(212, 160, 56, .38);
+}
+.toast-warning .toast-icon{
+  background: linear-gradient(135deg, #dba63e, #b78326);
+  color: #fff;
+}
+.toast-warning .toast-title,
+.toast-warning .toast-text{
+  color: var(--notif-warning-text);
+}
+.toast-warning::after{
+  background: linear-gradient(90deg, #d4a038, #f2cf7c);
+}
+
+.toast-info{
+  background: var(--notif-info-bg);
+  border-color: rgba(63, 120, 197, .35);
+}
+.toast-info .toast-icon{
+  background: linear-gradient(135deg, #4c84d1, #2d64b3);
+  color: #fff;
+}
+.toast-info .toast-title,
+.toast-info .toast-text{
+  color: var(--notif-info-text);
+}
+.toast-info::after{
+  background: linear-gradient(90deg, #3f78c5, #85b2ef);
+}
+
+/* animasi masuk */
+@keyframes toastIn{
+  0%{
+    opacity: 0;
+    transform: translateY(-14px) scale(.96);
+    filter: blur(3px);
+  }
+  60%{
+    opacity: 1;
+    transform: translateY(2px) scale(1.01);
+    filter: blur(0);
+  }
+  100%{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastOut{
+  0%{
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100%{
+    opacity: 0;
+    transform: translateY(-10px) scale(.96);
+  }
+}
+
+@keyframes toastProgress{
+  from{ transform: scaleX(1); }
+  to{ transform: scaleX(0); }
+}
+
+/* inline alert kalau masih dipakai di form */
+.form-alert,
+.inline-alert,
+.status-alert{
+  position: relative;
+  margin-top: 14px;
+  padding: 16px 18px 16px 18px;
+  border-radius: 18px;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.5;
+  border: 1.5px solid transparent;
+  box-shadow: 0 10px 24px rgba(20,48,78,.08);
+  animation: toastIn .45s ease;
+}
+
+.form-alert.success,
+.inline-alert.success,
+.status-alert.success{
+  background: var(--notif-success-bg);
+  color: var(--notif-success-text);
+  border-color: rgba(47, 158, 116, .4);
+}
+
+.form-alert.error,
+.inline-alert.error,
+.status-alert.error{
+  background: var(--notif-error-bg);
+  color: var(--notif-error-text);
+  border-color: rgba(194, 84, 77, .4);
+}
+
+.form-alert.warning,
+.inline-alert.warning,
+.status-alert.warning{
+  background: var(--notif-warning-bg);
+  color: var(--notif-warning-text);
+  border-color: rgba(212, 160, 56, .4);
+}
+
+.form-alert.info,
+.inline-alert.info,
+.status-alert.info{
+  background: var(--notif-info-bg);
+  color: var(--notif-info-text);
+  border-color: rgba(63, 120, 197, .4);
+}
+
+/* mobile */
+@media (max-width: 768px){
+  .toast-stack{
+    top: 76px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+
+  .toast-card{
+    grid-template-columns: 46px 1fr 30px;
+    gap: 10px;
+    padding: 12px 12px 12px 10px;
+    border-radius: 16px;
+  }
+
+  .toast-icon{
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    font-size: 20px;
+  }
+
+  .toast-title{
+    font-size: 14px;
+  }
+
+  .toast-text{
+    font-size: 12.5px;
+  }
+
+  .toast-close{
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .toast-card,
+  .form-alert,
+  .inline-alert,
+  .status-alert{
+    animation: none !important;
+  }
+
+  .toast-card::after{
+    animation: none !important;
+  }
+}
+
+/* SILAS — FIX: mobile bottom navigation always visible
+   Paste this at the VERY END of styles.css.
+   Uses existing #sidebar, .nav-list, .nav-item and data-view attributes.
+*/
+
+@media screen and (max-width: 850px) {
+  body {
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow-x: clip !important;
+  }
+
+  /* Keep the sidebar shell available as an anchor, but collapse its desktop frame. */
+  #appShell:not(.hidden) #sidebar.sidebar {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: static !important;
+    inset: auto !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+    pointer-events: none !important;
+    z-index: 9998 !important;
+  }
+
+  #appShell:not(.hidden) #sidebar .sidebar-brand,
+  #appShell:not(.hidden) #sidebar .sidebar-label,
+  #appShell:not(.hidden) #sidebar .sidebar-foot {
+    display: none !important;
+  }
+
+  /* The dock is fixed to the viewport, not part of the scrolling page. */
+  #appShell:not(.hidden) #sidebar .nav-list {
+    display: grid !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    z-index: 99999 !important;
+    left: 9px !important;
+    right: 9px !important;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    width: auto !important;
+    max-width: 560px !important;
+    margin: 0 auto !important;
+    padding: 9px 8px 8px !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    align-items: end !important;
+    gap: 4px !important;
+    border: 1px solid #cbd9e9 !important;
+    border-top: 2px solid #d8b56e !important;
+    border-radius: 20px !important;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(245, 231, 200, .72), transparent 38%),
+      linear-gradient(145deg, rgba(255, 254, 250, .98), rgba(231, 240, 251, .98)) !important;
+    box-shadow: 0 14px 35px rgba(8, 31, 64, .24), inset 0 1px 0 rgba(255,255,255,.95) !important;
+    backdrop-filter: blur(18px) saturate(1.15);
+    -webkit-backdrop-filter: blur(18px) saturate(1.15);
+    pointer-events: auto !important;
+    isolation: isolate;
+  }
+
+  #appShell:not(.hidden) #sidebar .nav-item {
+    display: flex !important;
+    position: relative !important;
+    z-index: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 51px !important;
+    margin: 0 !important;
+    padding: 6px 2px 5px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    border: 1px solid transparent !important;
+    border-radius: 14px !important;
+    background: transparent !important;
+    color: #526b87 !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    text-align: center !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    pointer-events: auto !important;
+    transform: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #appShell:not(.hidden) #sidebar .nav-icon {
+    display: grid !important;
+    place-items: center !important;
+    width: 26px !important;
+    height: 25px !important;
+    margin: 0 !important;
+    color: #456a98 !important;
+    font-size: 20px !important;
+    line-height: 1 !important;
+  }
+
+  #appShell:not(.hidden) #sidebar .nav-item.active {
+    color: #173e67 !important;
+    background: linear-gradient(145deg, #e4effd, #f9f5eb) !important;
+    border-color: #d0dfef !important;
+    box-shadow: inset 0 -2px 0 rgba(185, 78, 70, .75), 0 4px 10px rgba(39, 76, 117, .07) !important;
+  }
+
+  #appShell:not(.hidden) #sidebar .nav-item.active .nav-icon {
+    color: #b94e46 !important;
+  }
+
+  /* Center highlighted Input Laundry button. */
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="dashboard"] { grid-column: 1 !important; }
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="santri"] { grid-column: 2 !important; }
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="input"] {
+    grid-column: 3 !important;
+    min-height: 68px !important;
+    margin-top: -20px !important;
+    padding: 5px 2px 6px !important;
+    border: 1px solid #fff !important;
+    border-radius: 18px !important;
+    background: linear-gradient(150deg, #c65a4e, #a8403c 76%, #8d3437) !important;
+    color: #fffaf1 !important;
+    box-shadow: 0 8px 18px rgba(147, 55, 53, .28), 0 0 0 3px rgba(232, 207, 157, .86), inset 0 1px 0 rgba(255,255,255,.25) !important;
+  }
+
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="input"] .nav-icon {
+    width: 39px !important;
+    height: 36px !important;
+    border-radius: 12px !important;
+    background: linear-gradient(145deg, #fff0cc, #e6c77f) !important;
+    color: #8f3a36 !important;
+    font-size: 26px !important;
+  }
+
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="input"]::after {
+    content: "入力";
+    position: absolute;
+    top: -10px;
+    right: -3px;
+    min-width: 24px;
+    height: 19px;
+    padding: 0 4px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #f4dfb2;
+    border-radius: 7px;
+    background: #f8edcf;
+    color: #8f3a36;
+    font-family: "Noto Sans JP", sans-serif;
+    font-size: 9px;
+    font-weight: 800;
+    box-shadow: 0 3px 7px rgba(30, 47, 67, .12);
+  }
+
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="tahap"] { grid-column: 4 !important; }
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="laporan"] { grid-column: 5 !important; }
+
+  /* Keep the dock above page content and below modal/dialog overlays. */
+  #toastContainer { z-index: 100000 !important; }
+}
+
+@media screen and (max-width: 420px) {
+  #appShell:not(.hidden) #sidebar .nav-list {
+    left: 6px !important;
+    right: 6px !important;
+    padding: 8px 5px 7px !important;
+    gap: 2px !important;
+    border-radius: 18px !important;
+  }
+
+  #appShell:not(.hidden) #sidebar .nav-item {
+    min-height: 48px !important;
+    font-size: 8px !important;
+    letter-spacing: -.02em;
+  }
+
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="input"] {
+    min-height: 64px !important;
+    margin-top: -18px !important;
+  }
+
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="input"] .nav-icon {
+    width: 36px !important;
+    height: 33px !important;
+    font-size: 24px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #appShell:not(.hidden) #sidebar .nav-item,
+  #appShell:not(.hidden) #sidebar .nav-icon {
+    transition: none !important;
+    animation: none !important;
+  }
+}
