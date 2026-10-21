@@ -1719,3 +1719,306 @@ p{line-height:1.65}
 @media(prefers-reduced-motion:reduce){
   .suggestion-item{transition:none!important}
 }
+
+/* =========================================================
+   SILAS KISETSU — Mobile Dock & Overflow Repair
+   Mobile bottom navigation + center highlighted laundry action
+   ========================================================= */
+
+/* Prevent the page canvas from becoming wider than the viewport.
+   Tables remain horizontally scrollable inside their own containers. */
+html, body {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0 !important;
+  overflow-x: clip;
+}
+@supports not (overflow: clip) {
+  html, body { overflow-x: hidden; }
+}
+#appShell, .app-shell, .main-area, .view-section,
+.page-heading, .panel, .content-grid, .dashboard-grid,
+.input-layout, .report-layout, .period-grid,
+.dashboard-intro-grid, .dashboard-main-grid,
+.director-side-section, .table-panel, .table-wrap {
+  min-width: 0;
+  max-width: 100%;
+}
+img, video, canvas, iframe, svg { max-width: 100%; }
+.view-section > *, .panel > *, .page-heading > * { min-width: 0; }
+.table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.table-wrap table { max-width: none; }
+input, select, textarea { max-width: 100%; }
+
+/* Keep the desktop sidebar unchanged. On mobile, turn the nav into a fixed dock. */
+@media (max-width: 850px) {
+  body {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+    overflow-x: clip !important;
+  }
+  #appShell, .app-shell {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: clip;
+  }
+  .main-area {
+    margin-left: 0 !important;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .topbar {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  .breadcrumb {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    gap: 6px;
+  }
+  .breadcrumb span:first-child { flex: 0 0 auto; }
+  .breadcrumb strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .topbar-user { flex: 0 0 auto; }
+  .mobile-menu-btn { display: none !important; }
+
+  /* Sidebar shell is collapsed; its nav-list becomes the bottom dock.
+     The buttons retain their original data-view attributes and JS behavior. */
+  #sidebar.sidebar {
+    position: static !important;
+    inset: auto !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    overflow: visible !important;
+    transform: none !important;
+    pointer-events: none !important;
+    z-index: 120 !important;
+  }
+  #sidebar .sidebar-brand,
+  #sidebar .sidebar-label,
+  #sidebar .sidebar-foot {
+    display: none !important;
+  }
+  #sidebar .nav-list {
+    position: fixed !important;
+    z-index: 150 !important;
+    left: 10px !important;
+    right: 10px !important;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    width: auto !important;
+    max-width: 560px;
+    margin: 0 auto !important;
+    padding: 9px 8px 8px !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    align-items: end !important;
+    gap: 4px !important;
+    border: 1px solid rgba(181, 201, 224, .92) !important;
+    border-top: 2px solid #c9a25f !important;
+    border-radius: 21px !important;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(255, 239, 206, .58), transparent 34%),
+      linear-gradient(145deg, rgba(255, 254, 250, .97), rgba(232, 241, 251, .97)) !important;
+    box-shadow:
+      0 16px 38px rgba(16, 43, 76, .22),
+      0 3px 9px rgba(16, 43, 76, .08),
+      inset 0 1px 0 rgba(255, 255, 255, .95) !important;
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    pointer-events: auto !important;
+    isolation: isolate;
+  }
+  #sidebar .nav-list::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: 35%;
+    width: 30%;
+    height: 2px;
+    border-radius: 0 0 4px 4px;
+    background: linear-gradient(90deg, #b94e46, #e0bd77);
+    pointer-events: none;
+  }
+  #sidebar .nav-item {
+    position: relative;
+    z-index: 1;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 52px;
+    margin: 0 !important;
+    padding: 6px 2px 5px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    border: 1px solid transparent !important;
+    border-radius: 14px !important;
+    background: transparent !important;
+    color: #526b87 !important;
+    font-size: 9px !important;
+    font-weight: 750 !important;
+    line-height: 1.1 !important;
+    letter-spacing: -.01em;
+    text-align: center !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    transform: none;
+    transition: color .2s ease, background .2s ease, transform .2s ease, box-shadow .2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #sidebar .nav-icon {
+    width: 26px !important;
+    height: 25px !important;
+    display: grid !important;
+    place-items: center !important;
+    margin: 0 !important;
+    color: #456a98 !important;
+    font-size: 20px !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    transition: transform .2s ease, color .2s ease;
+  }
+  #sidebar .nav-item.active {
+    color: #173e67 !important;
+    background: linear-gradient(145deg, #e4effd, #f9f5eb) !important;
+    border-color: #d0dfef !important;
+    box-shadow: inset 0 -2px 0 rgba(185, 78, 70, .75), 0 4px 10px rgba(39, 76, 117, .07) !important;
+  }
+  #sidebar .nav-item.active .nav-icon {
+    color: #b94e46 !important;
+    transform: translateY(-1px);
+  }
+  #sidebar .nav-item:active { transform: scale(.96); }
+
+  /* Center action: Input Laundry. A raised vermilion/gold medallion makes it obvious. */
+  #sidebar .nav-item[data-view="input"] {
+    grid-column: 3 !important;
+    min-height: 70px !important;
+    margin-top: -23px !important;
+    padding: 4px 2px 6px !important;
+    border: 1px solid rgba(255, 255, 255, .96) !important;
+    border-radius: 19px !important;
+    background: linear-gradient(150deg, #b94e46 0%, #a8403c 72%, #8d3437 100%) !important;
+    color: #fffaf1 !important;
+    box-shadow:
+      0 8px 18px rgba(147, 55, 53, .28),
+      0 0 0 3px rgba(232, 207, 157, .82),
+      inset 0 1px 0 rgba(255, 255, 255, .28) !important;
+    transform: translateY(-2px);
+  }
+  #sidebar .nav-item[data-view="input"] .nav-icon {
+    width: 40px !important;
+    height: 37px !important;
+    border-radius: 13px !important;
+    background: linear-gradient(145deg, #fff0cc, #e6c77f) !important;
+    color: #8f3a36 !important;
+    font-size: 27px !important;
+    font-weight: 500;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 3px 7px rgba(72, 25, 25, .13);
+  }
+  #sidebar .nav-item[data-view="input"].active {
+    background: linear-gradient(150deg, #c65a4e 0%, #a8403c 78%) !important;
+    color: #fffaf1 !important;
+    box-shadow:
+      0 8px 18px rgba(147, 55, 53, .3),
+      0 0 0 3px rgba(232, 207, 157, .9),
+      inset 0 1px 0 rgba(255, 255, 255, .25) !important;
+  }
+  #sidebar .nav-item[data-view="input"]::after {
+    content: "入力";
+    position: absolute;
+    top: -11px;
+    right: -4px;
+    min-width: 25px;
+    height: 20px;
+    padding: 0 4px;
+    display: grid;
+    place-items: center;
+    border-radius: 7px;
+    border: 1px solid #f4dfb2;
+    background: #f8edcf;
+    color: #8f3a36;
+    font-family: "Noto Sans JP", sans-serif;
+    font-size: 9px;
+    font-weight: 800;
+    box-shadow: 0 3px 7px rgba(30, 47, 67, .12);
+  }
+  #sidebar .nav-item[data-view="input"] .nav-icon { transform: translateY(-1px); }
+  #sidebar .nav-item[data-view="dashboard"] { grid-column: 1 !important; }
+  #sidebar .nav-item[data-view="santri"] { grid-column: 2 !important; }
+  #sidebar .nav-item[data-view="tahap"] { grid-column: 4 !important; }
+  #sidebar .nav-item[data-view="laporan"] { grid-column: 5 !important; }
+
+  .view-section {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: clamp(10px, 3.2vw, 16px) !important;
+    padding-right: clamp(10px, 3.2vw, 16px) !important;
+    padding-bottom: 22px !important;
+  }
+  .page-heading { min-width: 0; }
+  .page-heading h1 { overflow-wrap: anywhere; }
+  .page-heading .muted { overflow-wrap: anywhere; }
+  .stat-grid, .content-grid, .input-layout, .report-layout, .period-grid,
+  .dashboard-intro-grid, .dashboard-main-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    min-width: 0 !important;
+  }
+  .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .panel, .stat-card { min-width: 0 !important; }
+  .form-row.two-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .table-panel .panel-heading { min-width: 0; }
+  .table-tools { min-width: 0; max-width: 100%; }
+  .table-tools > * { min-width: 0; }
+  .app-footer { padding-left: 12px !important; padding-right: 12px !important; padding-bottom: 16px !important; }
+}
+@media (max-width: 420px) {
+  #sidebar .nav-list {
+    left: 7px !important;
+    right: 7px !important;
+    padding: 8px 5px 7px !important;
+    gap: 2px !important;
+    border-radius: 18px !important;
+  }
+  #sidebar .nav-item {
+    font-size: 8px !important;
+    min-height: 49px;
+    letter-spacing: -.025em;
+  }
+  #sidebar .nav-icon { font-size: 19px !important; }
+  #sidebar .nav-item[data-view="input"] {
+    min-height: 66px !important;
+    margin-top: -20px !important;
+  }
+  #sidebar .nav-item[data-view="input"] .nav-icon {
+    width: 37px !important;
+    height: 34px !important;
+  }
+  .form-row.two-col { grid-template-columns: minmax(0, 1fr) !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #sidebar .nav-item, #sidebar .nav-icon { transition: none !important; }
+  #sidebar .nav-item[data-view="input"]::after { animation: none !important; }
+}
