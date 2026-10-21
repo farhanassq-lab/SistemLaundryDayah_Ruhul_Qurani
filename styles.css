@@ -1305,3 +1305,178 @@ p{line-height:1.65}
 @media(prefers-reduced-motion:reduce){
   .view-section:not(.hidden),.view-section:not(.hidden) .page-heading{animation:none!important}
 }
+
+
+/* ==========================================================
+   KISETSU HEADER POLISH — animated pearl / indigo / vermilion
+   Decorative treatment for the compact mobile and desktop topbar
+   ========================================================== */
+.topbar{
+  position:sticky;
+  isolation:isolate;
+  overflow:hidden;
+  min-height:68px;
+  background:
+    radial-gradient(ellipse at 92% -12%,rgba(216,181,110,.22),transparent 30%),
+    radial-gradient(ellipse at 78% 120%,rgba(185,78,70,.075),transparent 28%),
+    linear-gradient(112deg,rgba(252,253,255,.98) 0%,rgba(239,246,255,.97) 54%,rgba(250,247,240,.97) 100%)!important;
+  border-bottom:1px solid rgba(67,105,157,.18)!important;
+  box-shadow:0 7px 22px rgba(29,62,105,.075),inset 0 1px 0 rgba(255,255,255,.94)!important;
+}
+.topbar::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  inset:-18px -10px -12px 35%;
+  pointer-events:none;
+  opacity:.8;
+  background:
+    radial-gradient(circle at 1px 1px,rgba(49,95,152,.105) 1px,transparent 1.7px) 0 0/13px 13px,
+    repeating-radial-gradient(circle at 88% 48%,transparent 0 12px,rgba(49,95,152,.075) 13px 14px,transparent 15px 26px),
+    radial-gradient(circle at 88% 42%,rgba(216,181,110,.15),transparent 29%);
+  mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.45) 28%,#000 100%);
+  animation:silasTopbarPatternDrift 26s ease-in-out infinite alternate;
+}
+.topbar::after{
+  content:"";
+  position:absolute;
+  z-index:0;
+  left:0;right:0;bottom:0;
+  height:3px;
+  pointer-events:none;
+  background:linear-gradient(90deg,transparent 0%,#4777c2 24%,#d8b56e 52%,#b94e46 73%,#4777c2 91%,transparent 100%);
+  background-size:200% 100%;
+  opacity:.82;
+  animation:silasTopbarAccentFlow 9s linear infinite;
+}
+.topbar>*{position:relative;z-index:1}
+.breadcrumb{
+  min-width:0;
+  gap:8px!important;
+  animation:silasBreadcrumbArrive .5s cubic-bezier(.2,.7,.25,1) both;
+}
+.breadcrumb>span:first-child{
+  display:inline-flex;
+  align-items:center;
+  min-height:25px;
+  padding:0 9px;
+  border:1px solid rgba(80,119,174,.16);
+  border-radius:9px;
+  color:#527198!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(229,239,253,.84));
+  box-shadow:0 2px 7px rgba(38,78,133,.045),inset 0 1px 0 rgba(255,255,255,.95);
+  font-weight:650;
+}
+.breadcrumb .crumb-slash{color:#b6c3d4!important;font-size:11px}
+.breadcrumb strong{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  min-height:28px;
+  padding:0 10px 0 17px;
+  border:1px solid rgba(72,112,171,.15);
+  border-radius:9px;
+  background:linear-gradient(135deg,rgba(224,237,255,.94),rgba(250,252,255,.94));
+  color:#1d416f!important;
+  box-shadow:0 3px 10px rgba(34,76,132,.06);
+}
+.breadcrumb strong::before{
+  content:"";
+  position:absolute;
+  left:7px;top:7px;bottom:7px;
+  width:3px;
+  border-radius:3px;
+  background:linear-gradient(180deg,#d8b56e,#b94e46);
+  box-shadow:0 0 7px rgba(185,78,70,.16);
+}
+.breadcrumb::after{
+  content:"清潔";
+  display:inline-grid;
+  place-items:center;
+  flex:0 0 auto;
+  min-width:25px;
+  height:25px;
+  padding:0 5px;
+  border:1px solid rgba(216,181,110,.62);
+  border-radius:7px 7px 7px 2px;
+  color:#a34840;
+  background:linear-gradient(145deg,#fff8e9,#f5e5c5);
+  box-shadow:0 3px 9px rgba(130,80,43,.08);
+  font-family:"Noto Sans JP","Zen Kaku Gothic New",sans-serif;
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.04em;
+  transform:rotate(-3deg);
+  animation:silasSealFloat 5s ease-in-out infinite;
+}
+.topbar-user{
+  flex:0 0 auto;
+  padding:4px;
+  border:1px solid rgba(90,128,179,.14);
+  border-radius:14px;
+  background:linear-gradient(145deg,rgba(255,255,255,.82),rgba(232,241,253,.72));
+  box-shadow:0 4px 13px rgba(29,62,105,.055),inset 0 1px 0 rgba(255,255,255,.95);
+}
+.avatar{
+  position:relative;
+  border:1px solid rgba(255,255,255,.8);
+  background:linear-gradient(145deg,#dceaff 0%,#c9d9ff 55%,#f8e8c7 150%)!important;
+  color:#234d86!important;
+  box-shadow:0 4px 12px rgba(40,82,145,.15),inset 0 1px 0 rgba(255,255,255,.92)!important;
+  animation:silasAvatarBreathe 5s ease-in-out infinite;
+}
+.avatar::after{
+  content:"";
+  position:absolute;
+  right:-2px;bottom:-2px;
+  width:8px;height:8px;
+  border:2px solid #f7fbff;
+  border-radius:50%;
+  background:#2eaa7b;
+  box-shadow:0 0 0 2px rgba(46,170,123,.12);
+}
+.mobile-menu-btn{
+  position:relative;
+  flex:0 0 auto;
+  border:1px solid rgba(255,255,255,.72)!important;
+  border-radius:12px!important;
+  background:linear-gradient(145deg,#edf5ff 0%,#dce9ff 70%,#fff3dc 150%)!important;
+  color:#28568f!important;
+  box-shadow:0 4px 12px rgba(36,78,138,.13),inset 0 1px 0 rgba(255,255,255,.95)!important;
+  transition:transform .2s ease,box-shadow .2s ease,filter .2s ease;
+}
+.mobile-menu-btn:hover{transform:translateY(-1px);box-shadow:0 7px 16px rgba(36,78,138,.18),inset 0 1px 0 rgba(255,255,255,.95)!important;filter:saturate(1.08)}
+.mobile-menu-btn:active{transform:scale(.94)}
+@keyframes silasTopbarPatternDrift{
+  from{background-position:0 0,0 0,0 0}
+  to{background-position:13px -7px,12px 6px,-10px 4px}
+}
+@keyframes silasTopbarAccentFlow{0%{background-position:100% 0}100%{background-position:-100% 0}}
+@keyframes silasBreadcrumbArrive{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes silasSealFloat{0%,100%{transform:rotate(-3deg) translateY(0)}50%{transform:rotate(1deg) translateY(-2px)}}
+@keyframes silasAvatarBreathe{0%,100%{box-shadow:0 4px 12px rgba(40,82,145,.15),inset 0 1px 0 rgba(255,255,255,.92)}50%{box-shadow:0 5px 16px rgba(40,82,145,.21),0 0 0 3px rgba(216,181,110,.12),inset 0 1px 0 rgba(255,255,255,.92)}}
+@media(max-width:850px){
+  .topbar{min-height:64px;height:64px;padding-inline:14px!important}
+  .breadcrumb{gap:6px!important}
+  .breadcrumb>span:first-child{min-height:24px;padding-inline:7px;font-size:10px}
+  .breadcrumb strong{min-height:26px;padding-right:7px;padding-left:14px;font-size:10px}
+  .breadcrumb strong::before{left:6px;top:7px;bottom:7px;width:2px}
+  .breadcrumb::after{min-width:23px;height:24px;padding-inline:4px;font-size:8px}
+  .topbar-user{padding:3px;border-radius:12px}
+  .topbar-user .avatar{width:30px;height:30px;border-radius:10px}
+  .mobile-menu-btn{width:35px;height:35px;display:grid;place-items:center}
+}
+@media(max-width:390px){
+  .topbar{padding-inline:9px!important;gap:8px!important}
+  .breadcrumb{gap:4px!important}
+  .breadcrumb>span:first-child{padding-inline:6px;font-size:9px}
+  .breadcrumb strong{font-size:9px;padding-right:6px;padding-left:12px}
+  .breadcrumb::after{min-width:21px;height:22px;font-size:8px}
+  .topbar-user{padding:2px}
+  .topbar-user .avatar{width:29px;height:29px}
+}
+@media(max-width:350px){.breadcrumb::after{display:none}}
+@media(prefers-reduced-motion:reduce){
+  .topbar::before,.topbar::after,.breadcrumb,.breadcrumb::after,.avatar{animation:none!important}
+  .mobile-menu-btn{transition:none!important}
+}
