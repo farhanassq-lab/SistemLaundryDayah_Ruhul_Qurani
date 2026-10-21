@@ -1480,3 +1480,242 @@ p{line-height:1.65}
   .topbar::before,.topbar::after,.breadcrumb,.breadcrumb::after,.avatar{animation:none!important}
   .mobile-menu-btn{transition:none!important}
 }
+
+/* =========================================================
+   SILAS KISETSU — Contrast & Accent Repair
+   Fixes low-contrast santri names in autocomplete and tables.
+   Pearl surfaces + navy text + visible vermilion/gold details.
+   ========================================================= */
+:root{
+  --silas-ink-strong:#183754;
+  --silas-ink-body:#314d68;
+  --silas-ink-muted:#637d98;
+  --silas-pearl:#fffdf8;
+  --silas-pearl-blue:#edf4fc;
+  --silas-vermilion:#b94e46;
+  --silas-vermilion-deep:#923a35;
+  --silas-gold:#c49a4d;
+  --silas-gold-soft:#ead7ad;
+}
+
+/* Autocomplete: dark readable text on pearl background */
+#studentSuggestions,
+.suggestions{
+  background:linear-gradient(145deg,#fffefa 0%,#f1f6fc 100%)!important;
+  color:var(--silas-ink-strong)!important;
+  border:1px solid #c8d8e9!important;
+  border-top:3px solid var(--silas-gold)!important;
+  box-shadow:0 20px 42px rgba(20,48,78,.20)!important;
+}
+.suggestion-item,
+#studentSuggestions .suggestion-item{
+  position:relative;
+  color:var(--silas-ink-body)!important;
+  background:transparent!important;
+  border:1px solid transparent!important;
+  border-left:3px solid transparent!important;
+  border-radius:11px!important;
+  padding:11px 10px!important;
+  transition:background .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+.suggestion-item strong,
+#studentSuggestions .suggestion-item strong,
+.suggestions .suggestion-item strong{
+  display:block;
+  color:#183754!important;
+  font-weight:800!important;
+  font-size:12px!important;
+  line-height:1.4!important;
+  opacity:1!important;
+  text-shadow:none!important;
+}
+.suggestion-item small,
+#studentSuggestions .suggestion-item small,
+.suggestions .suggestion-item small{
+  display:block;
+  color:#607b98!important;
+  font-size:10.5px!important;
+  line-height:1.45!important;
+  opacity:1!important;
+  text-shadow:none!important;
+}
+.suggestion-item > span:last-child{
+  color:var(--silas-vermilion)!important;
+  font-size:22px!important;
+  font-weight:700!important;
+}
+.suggestion-avatar{
+  background:linear-gradient(145deg,#315f9a,#477fc0)!important;
+  color:#fff!important;
+  border:1px solid rgba(255,255,255,.9)!important;
+  box-shadow:0 5px 12px rgba(33,79,128,.18)!important;
+}
+.suggestion-item:hover,
+.suggestion-item:focus-visible,
+.suggestion-item.active,
+#studentSuggestions .suggestion-item:hover,
+#studentSuggestions .suggestion-item:focus-visible,
+#studentSuggestions .suggestion-item.active{
+  background:linear-gradient(100deg,#e7f0fb,#fff7e8)!important;
+  border-color:#d7e3f0!important;
+  border-left-color:var(--silas-vermilion)!important;
+  box-shadow:0 5px 13px rgba(32,69,108,.08)!important;
+  outline:none!important;
+}
+.suggestion-item:active{transform:scale(.995)}
+
+/* Santri tables: override the previous pale/white name styles explicitly */
+.table-wrap{
+  border:1px solid #d5e1ed!important;
+  border-radius:16px!important;
+  background:#fffdf8!important;
+  box-shadow:0 10px 24px rgba(25,58,92,.06)!important;
+}
+.table-wrap thead,
+.table-wrap thead tr{
+  background:linear-gradient(105deg,#1c456f 0%,#2e6294 72%,#315f88 100%)!important;
+}
+.table-wrap th,
+.table-wrap thead th{
+  position:relative;
+  color:#fff9ed!important;
+  background:transparent!important;
+  border-color:rgba(255,255,255,.15)!important;
+  text-shadow:none!important;
+}
+.table-wrap th:first-child{
+  border-left:3px solid var(--silas-vermilion)!important;
+}
+.table-wrap th:last-child{
+  box-shadow:inset -3px 0 0 var(--silas-gold)!important;
+}
+.table-wrap tbody tr,
+.table-wrap tbody tr:nth-child(odd){
+  background:linear-gradient(100deg,#fffefa 0%,#f7faff 100%)!important;
+}
+.table-wrap tbody tr:nth-child(even){
+  background:linear-gradient(100deg,#edf4fc 0%,#e5eef9 100%)!important;
+}
+.table-wrap tbody tr:hover{
+  background:linear-gradient(100deg,#e4eefb 0%,#fff5e5 100%)!important;
+}
+.table-wrap td,
+.table-wrap tbody td{
+  color:#314d68!important;
+  border-bottom:1px solid #d9e4ef!important;
+  text-shadow:none!important;
+}
+.table-wrap td strong,
+.table-wrap tbody td strong,
+#studentsBody .person-cell strong,
+#stageRecordsBody .person-cell strong,
+.person-cell strong{
+  color:#183754!important;
+  font-weight:800!important;
+  opacity:1!important;
+  text-shadow:none!important;
+  -webkit-text-fill-color:#183754!important;
+}
+.table-wrap td small,
+.table-wrap tbody td small,
+#studentsBody .person-cell small,
+#stageRecordsBody .person-cell small,
+.person-cell small{
+  color:#637d98!important;
+  opacity:1!important;
+  text-shadow:none!important;
+  -webkit-text-fill-color:#637d98!important;
+}
+.person-cell{gap:10px!important}
+.mini-avatar{
+  background:linear-gradient(145deg,#dceafa,#c6dbf2)!important;
+  color:#244f7b!important;
+  border:1px solid #c4d8ec!important;
+  box-shadow:0 4px 10px rgba(33,79,128,.08)!important;
+}
+.table-wrap tbody tr td:first-child{
+  border-left:3px solid transparent!important;
+}
+.table-wrap tbody tr:hover td:first-child{
+  border-left-color:var(--silas-vermilion)!important;
+}
+.status-tag.active{
+  background:#e2f3e9!important;color:#21684f!important;border:1px solid #bfe1cf!important;
+}
+.status-tag.inactive{
+  background:#f8e8e5!important;color:#923a35!important;border:1px solid #ebc9c2!important;
+}
+.text-btn{
+  color:#28588c!important;
+  background:linear-gradient(145deg,#fffefa,#eaf2fb)!important;
+  border:1px solid #cbdced!important;
+}
+.text-btn.danger{
+  color:#923a35!important;
+  background:linear-gradient(145deg,#fff7f2,#f8e7e1)!important;
+  border-color:#e8c3b7!important;
+}
+.total-chip{
+  color:#244f7c!important;
+  background:linear-gradient(100deg,#e2edf9,#fff2d8)!important;
+  border:1px solid #d4e0ed!important;
+  box-shadow:inset 3px 0 0 var(--silas-gold)!important;
+}
+
+/* Contrast consistency for biodata, forms, helper copy, and other page tables */
+.bio-top strong,.bio-item strong,
+.panel-heading h2,.panel-heading h3,
+.period-card strong,.period-stage strong,
+.helper-panel h3,.helper-rule strong,
+.report-includes strong,
+.settings-logo-card strong,
+.director-details h3{
+  color:#1c456b!important;
+  opacity:1!important;
+  text-shadow:none!important;
+}
+.bio-top small,.bio-item small,
+.helper-rule small,.notice-box p,
+.period-card small,.period-stage small,
+.report-includes div,
+.field-help,.muted{
+  color:#647d97!important;
+  opacity:1!important;
+  text-shadow:none!important;
+}
+.field label,.auth-form label{
+  color:#294f73!important;
+}
+.field input,.field select,.field textarea,
+.auth-form input,.search-input,.table-tools select{
+  color:#183754!important;
+  caret-color:#b94e46;
+}
+.field input::placeholder,.field textarea::placeholder,
+.auth-form input::placeholder,.search-input::placeholder{
+  color:#778ca4!important;
+  opacity:1!important;
+}
+.eyebrow:before,.page-heading:after{
+  background:linear-gradient(90deg,var(--silas-vermilion) 0%,var(--silas-gold) 58%,#477bb1 100%)!important;
+}
+.btn-primary{
+  background:linear-gradient(115deg,#234f80 0%,#326ba4 76%,#b94e46 180%)!important;
+  border:1px solid rgba(196,154,77,.48)!important;
+  box-shadow:0 8px 18px rgba(29,70,111,.19),inset 0 1px 0 rgba(255,255,255,.15)!important;
+}
+.btn-primary:after{
+  background:linear-gradient(180deg,var(--silas-gold),var(--silas-vermilion))!important;
+}
+@media(max-width:520px){
+  .suggestions{max-height:44vh!important}
+  .suggestion-item{padding:12px 9px!important;gap:9px!important}
+  .suggestion-item strong{font-size:12px!important}
+  .suggestion-item small{font-size:10px!important}
+  .table-wrap{border-radius:13px!important}
+  .table-wrap th{padding:12px 13px!important}
+  .table-wrap td{padding:12px 13px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .suggestion-item{transition:none!important}
+}
