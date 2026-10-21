@@ -2544,3 +2544,221 @@ input, select, textarea { max-width: 100%; }
     animation: none !important;
   }
 }
+/* SILAS KISETSU — FIX MOBILE BOTTOM NAV + FULL SIDEBAR MOSQUE IMAGE
+   Cara pakai: tempelkan seluruh isi file ini di BARIS PALING BAWAH styles.css.
+   Dibuat untuk struktur index.html: #appShell, #sidebar, .nav-list, .nav-item.
+*/
+
+/* SIDEBAR DESKTOP: masjid memenuhi sidebar dengan gradasi biru agar teks terbaca */
+#sidebar.sidebar {
+  isolation: isolate;
+  position: fixed;
+  overflow: hidden;
+  background: linear-gradient(180deg, #08264d 0%, #0b3470 58%, #081e3f 100%) !important;
+}
+#sidebar.sidebar::after {
+  content: "";
+  position: absolute;
+  inset: 0 !important;
+  z-index: 0 !important;
+  width: 100%;
+  height: 100% !important;
+  border-radius: 0 !important;
+  background:
+    linear-gradient(180deg,
+      rgba(5, 22, 47, .92) 0%,
+      rgba(7, 34, 68, .78) 34%,
+      rgba(7, 30, 59, .48) 68%,
+      rgba(5, 20, 42, .74) 100%),
+    url('./assets/masjid-senja.jpg') center center / cover no-repeat !important;
+  opacity: 1 !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+  pointer-events: none;
+}
+#sidebar.sidebar > * {
+  position: relative;
+  z-index: 2;
+}
+#sidebar .sidebar-foot {
+  background: linear-gradient(180deg, transparent, rgba(4, 18, 39, .45));
+  border-top-color: rgba(218, 184, 111, .35) !important;
+}
+
+/* MOBILE: sidebar diubah menjadi dock bawah yang selalu terlihat, bukan drawer tersembunyi */
+@media screen and (max-width: 850px) {
+  body {
+    padding-bottom: calc(106px + env(safe-area-inset-bottom, 0px)) !important;
+    overflow-x: hidden !important;
+  }
+  #appShell:not(.hidden) {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+  }
+  #appShell:not(.hidden) #sidebar.sidebar {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    top: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    inset: auto 0 0 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-width: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    transform: none !important;
+    transition: none !important;
+    z-index: 99999 !important;
+    pointer-events: none !important;
+  }
+  #appShell:not(.hidden) #sidebar.sidebar::after,
+  #appShell:not(.hidden) #sidebar .sidebar-brand,
+  #appShell:not(.hidden) #sidebar .sidebar-label,
+  #appShell:not(.hidden) #sidebar .sidebar-foot {
+    display: none !important;
+  }
+  #appShell:not(.hidden) #sidebar .nav-list {
+    position: relative !important;
+    display: grid !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    width: auto !important;
+    max-width: 560px !important;
+    margin: 0 8px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 9px 7px 8px !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    align-items: end !important;
+    gap: 3px !important;
+    border: 1px solid rgba(184, 204, 228, .95) !important;
+    border-top: 2px solid #d8b56e !important;
+    border-radius: 21px !important;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(245, 226, 187, .65), transparent 42%),
+      linear-gradient(145deg, rgba(255, 254, 250, .98), rgba(229, 239, 251, .98)) !important;
+    box-shadow: 0 15px 35px rgba(7, 25, 52, .28), inset 0 1px 0 rgba(255,255,255,.95) !important;
+    backdrop-filter: blur(18px) saturate(1.15);
+    -webkit-backdrop-filter: blur(18px) saturate(1.15);
+    pointer-events: auto !important;
+    box-sizing: border-box !important;
+  }
+  #appShell:not(.hidden) #sidebar .nav-item {
+    display: flex !important;
+    position: relative !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 51px !important;
+    margin: 0 !important;
+    padding: 6px 2px 5px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    border: 1px solid transparent !important;
+    border-radius: 13px !important;
+    background: transparent !important;
+    color: #49627f !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+    text-align: center !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    transform: none;
+    pointer-events: auto !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #appShell:not(.hidden) #sidebar .nav-icon {
+    display: grid !important;
+    place-items: center !important;
+    width: 25px !important;
+    height: 24px !important;
+    margin: 0 !important;
+    color: #315f94 !important;
+    font-size: 20px !important;
+    line-height: 1 !important;
+  }
+  #appShell:not(.hidden) #sidebar .nav-item.active {
+    color: #183d65 !important;
+    background: linear-gradient(145deg, #e5effd, #fff5df) !important;
+    border-color: #d2dfef !important;
+    box-shadow: inset 0 -2px 0 #b94e46, 0 4px 10px rgba(39,76,117,.08) !important;
+  }
+  #appShell:not(.hidden) #sidebar .nav-item.active .nav-icon {
+    color: #b94e46 !important;
+  }
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="dashboard"] { grid-column: 1 !important; }
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="santri"] { grid-column: 2 !important; }
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="input"] {
+    grid-column: 3 !important;
+    min-height: 67px !important;
+    margin-top: -18px !important;
+    padding: 5px 2px 6px !important;
+    border: 1px solid #fff !important;
+    border-radius: 18px !important;
+    background: linear-gradient(150deg, #c65a4e 0%, #a8403c 75%, #8d3437 100%) !important;
+    color: #fffaf1 !important;
+    box-shadow: 0 8px 18px rgba(147,55,53,.3), 0 0 0 3px rgba(232,207,157,.88), inset 0 1px 0 rgba(255,255,255,.25) !important;
+  }
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="input"] .nav-icon {
+    width: 39px !important;
+    height: 36px !important;
+    border-radius: 12px !important;
+    background: linear-gradient(145deg, #fff0cc, #e6c77f) !important;
+    color: #8f3a36 !important;
+    font-size: 27px !important;
+  }
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="input"]::after {
+    content: "入力";
+    position: absolute;
+    top: -10px;
+    right: -3px;
+    min-width: 24px;
+    height: 19px;
+    padding: 0 4px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #f4dfb2;
+    border-radius: 7px;
+    background: #f8edcf;
+    color: #8f3a36;
+    font-family: "Noto Sans JP", sans-serif;
+    font-size: 9px;
+    font-weight: 800;
+    box-shadow: 0 3px 7px rgba(30,47,67,.12);
+  }
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="tahap"] { grid-column: 4 !important; }
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="laporan"] { grid-column: 5 !important; }
+  .main-area { margin-left: 0 !important; width: 100% !important; min-width: 0 !important; }
+}
+@media screen and (max-width: 420px) {
+  #appShell:not(.hidden) #sidebar .nav-list {
+    margin-left: 6px !important;
+    margin-right: 6px !important;
+    padding: 8px 4px 7px !important;
+    gap: 2px !important;
+    border-radius: 18px !important;
+  }
+  #appShell:not(.hidden) #sidebar .nav-item { min-height: 48px !important; font-size: 8px !important; }
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="input"] { min-height: 63px !important; }
+  #appShell:not(.hidden) #sidebar .nav-item[data-view="input"] .nav-icon { width: 36px !important; height: 33px !important; font-size: 24px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #appShell:not(.hidden) #sidebar .nav-item { transition: none !important; animation: none !important; }
+}
