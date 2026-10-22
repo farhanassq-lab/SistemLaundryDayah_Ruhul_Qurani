@@ -319,64 +319,7 @@ async function openDashboardWithDoors() {
   transition.setAttribute('aria-hidden', 'true');
 }
 
-function wireEvents() {
-  $('#loginForm').addEventListener('submit', onLogin);
-  $('#logoutBtn').addEventListener('click', async () => {
-    const { error } = await state.supabase.auth.signOut();
-    if (error) showToast(friendlyError(error), 'error');
-    else showToast('Kamu sudah keluar.', 'success');
-  });
-  $$('.nav-item').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
-  $$('[data-goto]').forEach(button => button.addEventListener('click', () => setView(button.dataset.goto)));
-  $('#mobileMenuBtn').addEventListener('click', () => $('#sidebar').classList.toggle('open'));
-  $('#inputPeriod').addEventListener('change', () => { populateStageSelect(); loadStageRecords(); });
-  $('#inputStage').addEventListener('change', loadStageRecords);
-  $('#stageRecordsBody').addEventListener('click', onLaundryRecordAction);
-  $('#studentSearch').addEventListener('input', onStudentSearch);
-  $('#studentSearch').addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') $('#studentSuggestions').classList.add('hidden');
-  });
-  $('#laundryForm').addEventListener('submit', onSaveLaundry);
-  $('#laundryForm').addEventListener('reset', () => {
-    window.setTimeout(() => {
-      state.selectedStudent = null;
-      $('#studentBio').classList.add('hidden');
-      $('#studentSuggestions').classList.add('hidden');
-      hideMessage('#laundryMessage');
-      populateStageSelect();
-    }, 0);
-  });
-  $('#showStudentFormBtn').addEventListener('click', () => openStudentForm());
-  $('#cancelStudentFormBtn').addEventListener('click', closeStudentForm);
-  $('#cancelStudentFormBtn2').addEventListener('click', closeStudentForm);
-  $('#studentForm').addEventListener('submit', onSaveStudent);
-  $('#studentLevel').addEventListener('change', () => populateRoomSelect());
-  $('#studentFilter').addEventListener('input', renderStudents);
-  $('#studentLevelFilter').addEventListener('change', renderStudents);
-  $('#studentsBody').addEventListener('click', onStudentTableAction);
-  $('#periodForm').addEventListener('submit', onCreatePeriod);
-  $('#stageForm').addEventListener('submit', onCreateStage);
-  ['#stageNumber', '#stagePeriod'].forEach(selector => $(selector).addEventListener('change', renderStageSchedulePreview));
-  $('#stageDate').addEventListener('input', renderStageSchedulePreview);
-  $('#stageDate').addEventListener('change', renderStageSchedulePreview);
-  renderStageSchedulePreview();
-  $('#periodsList').addEventListener('click', onPeriodListAction);
-  $('#directorPhotoFile').addEventListener('change', onDirectorPhotoChange);
-  $('#clearDirectorPhotoBtn').addEventListener('click', () => {
-    state.reportSettings.foto_direktur_data = null;
-    $('#directorPhotoFile').value = '';
-    renderDirectorPhotoPreview();
-    renderDirectorCard();
-  });
-  $('#reportForm').addEventListener('submit', onGenerateReport);
-  $('#reportSettingsForm').addEventListener('submit', onSaveReportSettings);
-  ['#settingDayahName','#settingAddress','#settingContact','#settingReportTitle'].forEach(sel => $(sel).addEventListener('input', updateReportSettingsPreview));
-  $('#laundryLogoFile').addEventListener('change', event => onLogoFileChange(event, 'logo_laundry_data'));
-  $('#dayahLogoFile').addEventListener('change', event => onLogoFileChange(event, 'logo_dayah_data'));
-  $('#clearLaundryLogoBtn').addEventListener('click', () => { state.reportSettings.logo_laundry_data = null; $('#laundryLogoFile').value = ''; renderReportLogoPreviews(); });
-  $('#clearDayahLogoBtn').addEventListener('click', () => { state.reportSettings.logo_dayah_data = null; $('#dayahLogoFile').value = ''; renderReportLogoPreviews(); });
-  $('#resetReportSettingsBtn').addEventListener('click', resetReportSettingsForm);
-}
+
 
 
 async function playLoginPaperTear() {
