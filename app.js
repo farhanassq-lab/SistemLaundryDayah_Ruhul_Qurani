@@ -472,7 +472,7 @@ async function playLoginPaperTear() {
   authScreen.classList.remove('is-tearing');
 }
 
-async function start() {
+async function initializeSilasApp() {
   try { state.defaultDayahLogoData = await imageUrlToDataUrl('./assets/logo-ruhul-qurani.png'); } catch (error) { console.warn('Logo default tidak dapat dimuat', error); }
   state.supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
@@ -1804,5 +1804,5 @@ if (!configured) {
   $('#authScreen').classList.add('hidden');
   $('#appShell').classList.add('hidden');
 } else {
-  start();
+  initializeSilasApp();
 }
