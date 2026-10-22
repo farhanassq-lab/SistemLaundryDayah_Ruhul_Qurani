@@ -1,43 +1,37 @@
-# SILAS — Landing Page + Animasi Login (Paket Terintegrasi)
+# SILAS — Landing Page + Animasi Login + Laporan Masalah
 
-Paket ini menggabungkan landing page SILAS dengan aplikasi laundry dan animasi login.
+Paket ini mempertahankan landing page di `index.html` dan memulihkan aplikasi laundry yang berisi modul Laporan Masalah.
 
-## Alur saat dibuka
-1. Pengunjung membuka link website dan langsung melihat `index.html` (landing page).
-2. Tombol **Masuk Sistem** / **Buka Aplikasi SILAS** menuju `sistem.html`.
-3. Jika belum login, halaman aplikasi menampilkan login dengan animasi pintu terbuka.
-4. Setelah Supabase memverifikasi email dan password, kartu login tersobek dan pintu dashboard terbuka.
-5. Jika login gagal, form tetap tersedia dan pesan kesalahan ditampilkan.
+## Alur website
+1. Link utama membuka `index.html` (landing page).
+2. Tombol Masuk Sistem menuju `sistem.html`.
+3. Halaman aplikasi memiliki animasi pintu login.
+4. Login sukses menampilkan animasi kartu sobek dan pintu dashboard.
+5. Dashboard tetap memiliki navigasi mobile tujuh menu, termasuk Input di tengah dan Laporan Masalah.
 
-## Isi penting
-- `index.html` — landing page utama yang dibuka otomatis oleh GitHub Pages.
-- `landing.html` — salinan landing page untuk referensi/pengeditan.
-- `landing.css`, `landing.js` — gaya dan interaksi landing page.
-- `sistem.html` — aplikasi SILAS dengan halaman login dan dashboard.
-- `app.js`, `styles.css` — aplikasi laundry dan animasi login.
-- `assets/landing/` — foto masjid, santri, dan logo untuk landing page.
-- `assets/` — aset aplikasi SILAS.
+## Modul yang dipulihkan
+- Laporan pakaian hilang, rusak, tidak bersih/bernoda, tertukar, jumlah kurang, masih basah, bau, dan lainnya.
+- Pilih santri dari saran; jenjang dan kamar terisi otomatis.
+- Unggah foto bukti ke bucket privat (maksimal 5 MB).
+- Riwayat laporan dan status tindak lanjut: baru, diperiksa, selesai.
+- Menyiapkan pesan WhatsApp berbahasa santai tetapi sopan; petugas tetap memilih grup dan menekan kirim.
+- Laporan laundry PDF dan menu terkait tetap berasal dari paket modul laporan.
+
+## File penting
+- `index.html` — landing page utama.
+- `landing.html`, `landing.css`, `landing.js`, `assets/landing/` — aset landing page.
+- `sistem.html` — aplikasi laundry dengan modul Laporan Masalah.
+- `app.js`, `styles.css` — logika aplikasi, modul laporan, navigasi, dan animasi login.
+- `SILAS_Laporan_Masalah.sql` — migrasi tabel laporan masalah dan bucket foto.
 
 ## Cara memasang
-1. Cadangkan repository / folder proyek SILAS terlebih dahulu.
-2. Ekstrak ZIP ini.
-3. Salin file dan folder dari paket ke folder repository website.
-4. Izinkan penggantian `index.html`, `landing.html`, `landing.css`, `landing.js`, `sistem.html`, `app.js`, `styles.css`, dan folder `assets` jika diminta.
-5. **Jangan hapus atau ganti `supabase-config.js` milikmu.** File itu tidak disertakan agar URL dan publishable key Supabase milikmu tetap aman. Pastikan file tersebut berada di folder yang sama dengan `sistem.html` dan `app.js`.
-6. Commit dan push perubahan ke GitHub, lalu tunggu GitHub Pages selesai menerbitkan.
-7. Buka link utama repository (tanpa `/sistem.html`) — landing page seharusnya muncul lebih dulu.
+1. Cadangkan folder/repository SILAS.
+2. Salin isi paket ini ke folder repository dan izinkan file yang sama diganti.
+3. Pertahankan `supabase-config.js` milikmu; file konfigurasi tersebut sengaja tidak disertakan.
+4. Jika migrasi Laporan Masalah belum pernah dijalankan, buka Supabase Dashboard → SQL Editor lalu jalankan `SILAS_Laporan_Masalah.sql`. Jika sudah pernah dijalankan dan tabel/bucket sudah ada, tidak perlu mengulang.
+5. Commit dan push perubahan ke GitHub.
+6. Buka URL utama tanpa `/sistem.html` untuk melihat landing page, lalu uji tombol Masuk Sistem.
 
-## Catatan keamanan dan data
-- Tidak ada perubahan database atau skema SQL.
-- `supabase-config.js` sengaja dipertahankan dari proyek milik pengguna.
-- Landing page tidak mengakses database.
-- Paket telah diperiksa secara statis; autentikasi tetap perlu diuji dengan konfigurasi Supabase milik pengguna.
-
-
-## Revisi animasi V2 — lebih lambat dan sobekan terlihat
-- Animasi pintu saat halaman login terbuka diperpanjang menjadi sekitar 1,95 detik.
-- Kartu login kini dibuat menjadi dua lapisan visual dengan isi form yang sama, lalu dipisahkan mengikuti tepi sobekan bergerigi. Efek ini menggantikan sobekan pseudo-element yang sebelumnya sulit terlihat.
-- Garis sobekan memakai aksen vermilion dan emas, dengan serpihan kertas yang terlempar.
-- Efek sobekan berlangsung sekitar 2,3 detik sebelum transisi dashboard dimulai.
-- Pintu dashboard diberi jeda singkat lalu terbuka selama sekitar 1,9 detik.
-- Autentikasi Supabase tetap sama; animasi sobekan hanya berjalan setelah login berhasil.
+## Catatan
+- Tidak ada perubahan pada skema tabel transaksi laundry yang sudah ada.
+- Paket telah diperiksa secara statis; autentikasi, unggah foto, dan query Supabase tetap perlu diuji dengan konfigurasi proyek milik pengguna.

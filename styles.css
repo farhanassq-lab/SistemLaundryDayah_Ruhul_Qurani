@@ -3143,28 +3143,26 @@ input, select, textarea { max-width: 100%; }
 }
 
 /* =========================================================
-   SILAS — MOBILE NAV ISOLATION FIX (FINAL)
-   Navigasi HP diletakkan sebagai saudara appShell, bukan anak sidebar.
-   Handler .nav-item/data-view yang sudah ada tetap digunakan oleh app.js.
+   SILAS — FIXED MOBILE DOCK OUTSIDE APP SHELL
+   Independent of sidebar positioning/overflow; visible after login.
    ========================================================= */
-.mobile-bottom-nav { display: none !important; }
+#mobileBottomNav { display: none; }
 
 @media screen and (max-width: 850px) {
-  /* Sidebar desktop tidak dipakai pada HP; menu khusus HP berdiri sendiri. */
+  body { padding-bottom: calc(104px + env(safe-area-inset-bottom, 0px)) !important; overflow-x: clip !important; }
   #sidebar.sidebar { display: none !important; }
   .mobile-menu-btn { display: none !important; }
 
-  #mobileBottomNav {
-    display: none !important;
+  body.app-authenticated #mobileBottomNav {
+    display: grid !important;
     position: fixed !important;
-    z-index: 1000 !important;
+    z-index: 2147483000 !important;
     left: max(6px, env(safe-area-inset-left, 0px)) !important;
     right: max(6px, env(safe-area-inset-right, 0px)) !important;
     bottom: calc(7px + env(safe-area-inset-bottom, 0px)) !important;
     width: auto !important;
     max-width: 620px !important;
     height: 70px !important;
-    max-height: 70px !important;
     margin: 0 auto !important;
     padding: 7px 5px 5px !important;
     grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
@@ -3175,38 +3173,23 @@ input, select, textarea { max-width: 100%; }
     border: 1px solid #c9d7e8 !important;
     border-top: 2px solid #d8b56e !important;
     border-radius: 20px !important;
-    background: radial-gradient(circle at 43% 0%, rgba(236, 213, 167, .55), transparent 43%),
-                linear-gradient(145deg, rgba(255, 254, 250, .99), rgba(231, 240, 251, .99)) !important;
-    box-shadow: 0 12px 30px rgba(17, 43, 72, .22),
-                inset 0 1px 0 rgba(255, 255, 255, .96) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(1.12) !important;
+    background:
+      radial-gradient(circle at 43% 0%, rgba(236,213,167,.58), transparent 43%),
+      linear-gradient(145deg, rgba(255,254,250,.985), rgba(231,240,251,.985)) !important;
+    box-shadow: 0 12px 30px rgba(17,43,72,.24), inset 0 1px 0 rgba(255,255,255,.96) !important;
     backdrop-filter: blur(18px) saturate(1.12) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.12) !important;
     overflow: visible !important;
     pointer-events: auto !important;
     isolation: isolate !important;
     transform: none !important;
-  }
-
-  /* Tampilkan dock hanya ketika appShell sudah terbuka setelah login.
-     Selector sengaja lebih spesifik daripada .hidden { display:none!important }. */
-  #appShell:not(.hidden) ~ #mobileBottomNav { display: grid !important; }
-
-  #mobileBottomNav::before {
-    content: "" !important;
-    position: absolute !important;
-    top: -2px !important;
-    left: 33% !important;
-    width: 34% !important;
-    height: 2px !important;
-    border-radius: 0 0 4px 4px !important;
-    background: linear-gradient(90deg, #8f4e31, #e3c27e, #b94e46) !important;
-    pointer-events: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
   #mobileBottomNav .nav-item {
     display: flex !important;
     position: relative !important;
-    z-index: 1 !important;
     width: 100% !important;
     min-width: 0 !important;
     height: 53px !important;
@@ -3221,7 +3204,8 @@ input, select, textarea { max-width: 100%; }
     border-radius: 12px !important;
     background: transparent !important;
     color: #36516f !important;
-    font-size: clamp(6.5px, 2vw, 8.5px) !important;
+    font-family: inherit !important;
+    font-size: clamp(6.5px, 1.95vw, 8.5px) !important;
     font-weight: 800 !important;
     line-height: 1.08 !important;
     letter-spacing: -.025em !important;
@@ -3229,14 +3213,11 @@ input, select, textarea { max-width: 100%; }
     white-space: normal !important;
     overflow: visible !important;
     overflow-wrap: anywhere !important;
-    word-break: normal !important;
     box-shadow: none !important;
     transform: none !important;
-    pointer-events: auto !important;
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
   }
-
   #mobileBottomNav .nav-icon {
     display: grid !important;
     place-items: center !important;
@@ -3248,17 +3229,7 @@ input, select, textarea { max-width: 100%; }
     font-size: 18px !important;
     line-height: 1 !important;
   }
-
-  #mobileBottomNav .mobile-nav-label {
-    display: block !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
-    text-overflow: clip !important;
-    white-space: nowrap !important;
-    font-size: inherit !important;
-    line-height: 1.1 !important;
-  }
-
+  #mobileBottomNav .mobile-nav-label { display: block !important; }
   #mobileBottomNav .nav-item.active {
     color: #173e67 !important;
     background: linear-gradient(145deg, #e6f0fc, #fbf5e8) !important;
@@ -3267,72 +3238,319 @@ input, select, textarea { max-width: 100%; }
   }
   #mobileBottomNav .nav-item.active .nav-icon { color: #a65337 !important; }
 
-  /* Tombol TAMBAH mendapat aksen cokelat-emas pada slot ketiga. */
+  #mobileBottomNav .nav-item[data-view="dashboard"] { grid-column: 1 !important; grid-row: 1 !important; }
+  #mobileBottomNav .nav-item[data-view="santri"] { grid-column: 2 !important; grid-row: 1 !important; }
+  #mobileBottomNav .nav-item[data-view="tahap"] { grid-column: 4 !important; grid-row: 1 !important; }
+  #mobileBottomNav .nav-item[data-view="laporan"] { grid-column: 5 !important; grid-row: 1 !important; }
+  #mobileBottomNav .nav-item[data-view="pengaturan"] { grid-column: 6 !important; grid-row: 1 !important; }
+
+  /* Input action is absolutely centred, not merely the third grid cell. */
   #mobileBottomNav .nav-item[data-view="input"] {
-    grid-column: 3 !important;
-    grid-row: 1 !important;
-    align-self: center !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 2px !important;
+    width: 56px !important;
     height: 62px !important;
     min-height: 62px !important;
-    margin-top: -11px !important;
+    margin: 0 !important;
     padding: 5px 1px !important;
-    border: 1px solid rgba(255, 255, 255, .98) !important;
+    transform: translateX(-50%) translateY(-2px) !important;
+    z-index: 5 !important;
+    border: 1px solid rgba(255,255,255,.98) !important;
     border-radius: 17px !important;
     background: linear-gradient(150deg, #a86442 0%, #87452f 72%, #713927 100%) !important;
     color: #fffaf1 !important;
-    box-shadow: 0 7px 16px rgba(103, 57, 35, .26),
-                0 0 0 3px rgba(225, 194, 126, .9),
-                inset 0 1px 0 rgba(255, 255, 255, .28) !important;
+    box-shadow: 0 7px 16px rgba(103,57,35,.27), 0 0 0 3px rgba(225,194,126,.94), inset 0 1px 0 rgba(255,255,255,.28) !important;
+    animation: silasMobilePlusIn .38s cubic-bezier(.2,.8,.2,1) both;
   }
   #mobileBottomNav .nav-item[data-view="input"] .nav-icon {
-    width: 32px !important;
-    height: 30px !important;
-    border-radius: 10px !important;
+    width: 34px !important;
+    height: 32px !important;
+    border-radius: 11px !important;
     background: linear-gradient(145deg, #fff1cf, #e5c47b) !important;
     color: #80442d !important;
-    font-size: 24px !important;
+    font-size: 25px !important;
     font-weight: 500 !important;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .85),
-                0 3px 7px rgba(62, 33, 20, .16) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.85), 0 3px 7px rgba(62,33,20,.16) !important;
   }
   #mobileBottomNav .nav-item[data-view="input"] .mobile-nav-label {
     color: #fffaf1 !important;
-    font-weight: 900 !important;
-    letter-spacing: .04em !important;
-  }
-  #mobileBottomNav .nav-item[data-view="input"]::after {
-    content: "TAMBAH" !important;
-    position: absolute !important;
-    top: -9px !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    display: block !important;
-    width: max-content !important;
-    padding: 3px 6px !important;
-    border: 1px solid #e8cf98 !important;
-    border-radius: 7px !important;
-    background: #f8edcf !important;
-    color: #79412d !important;
     font-size: 7px !important;
     font-weight: 900 !important;
-    line-height: 1.2 !important;
     letter-spacing: .045em !important;
-    box-shadow: 0 3px 7px rgba(30, 47, 67, .12) !important;
-    pointer-events: none !important;
   }
-
-  body { padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important; }
+  #mobileBottomNav .nav-item[data-view="input"]::after { content: none !important; }
+  #mobileBottomNav .nav-item[data-view="input"].active {
+    background: linear-gradient(150deg, #ad6b47, #7f402d) !important;
+    color: #fffaf1 !important;
+  }
+  .main-area { width: 100% !important; max-width: 100% !important; min-width: 0 !important; margin-left: 0 !important; }
+  .view-section { padding-bottom: 25px; }
 }
-
 @media screen and (max-width: 360px) {
-  #mobileBottomNav { left: 4px !important; right: 4px !important; padding-left: 3px !important; padding-right: 3px !important; gap: 1px !important; }
+  body { padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important; }
+  body.app-authenticated #mobileBottomNav { left: 4px !important; right: 4px !important; padding-left: 3px !important; padding-right: 3px !important; gap: 1px !important; }
   #mobileBottomNav .nav-item { font-size: 6.2px !important; letter-spacing: -.04em !important; }
   #mobileBottomNav .nav-icon { width: 20px !important; height: 20px !important; font-size: 17px !important; }
   #mobileBottomNav .nav-item[data-view="input"] { height: 59px !important; min-height: 59px !important; }
 }
-
+@keyframes silasMobilePlusIn {
+  from { opacity: .65; transform: translateX(-50%) translateY(4px) scale(.94); }
+  to { opacity: 1; transform: translateX(-50%) translateY(-2px) scale(1); }
+}
 @media (prefers-reduced-motion: reduce) {
-  #mobileBottomNav .nav-item { animation: none !important; transition: none !important; }
+  #mobileBottomNav .nav-item[data-view="input"] { animation: none !important; }
+}
+
+/* =========================================================
+   SILAS — LAPORAN MASALAH LAUNDRY
+   ========================================================= */
+.issue-entry-card {
+  display: grid;
+  grid-template-columns: 52px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 15px;
+  margin: 0 0 18px;
+  padding: 18px;
+  border: 1px solid #d5e1ef;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(216,181,110,.18), transparent 36%),
+    linear-gradient(135deg, #fffefa, #edf4fc);
+}
+.issue-entry-icon {
+  display: grid; place-items: center;
+  width: 50px; height: 50px; border-radius: 15px;
+  color: #fff7e7; font-size: 24px;
+  background: linear-gradient(145deg,#b95a4b,#8f3d35);
+  box-shadow: 0 7px 16px rgba(143,61,53,.2), 0 0 0 3px #f2dfb9;
+}
+.issue-entry-copy strong { display:block; color:#183754; font-size:14px; }
+.issue-entry-copy p { margin:5px 0 0; font-size:12px; line-height:1.6; }
+.issue-layout { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(260px,.8fr); gap:18px; align-items:start; }
+.issue-form-panel { min-width:0; }
+.issue-form-icon {
+  display:grid; place-items:center; width:43px; height:43px; flex:0 0 auto;
+  border-radius:14px; color:#7c482d; font-size:20px;
+  background:linear-gradient(145deg,#fff0ce,#e5c47b); border:1px solid #e8d29f;
+}
+.issue-guide-panel {
+  position:relative; overflow:hidden;
+  background:radial-gradient(circle at 100% 0%,rgba(216,181,110,.2),transparent 38%),linear-gradient(145deg,#fffefa,#edf4fc);
+  border-color:#d4dfed;
+}
+.issue-guide-emblem {
+  display:grid; place-items:center; width:52px; height:52px; margin-bottom:16px;
+  border-radius:17px; color:#fff0cc; font-family:"Noto Sans JP",sans-serif; font-size:25px;
+  background:linear-gradient(145deg,#17395f,#244f7d); border:1px solid #d8b56e;
+  box-shadow:0 8px 18px rgba(23,57,95,.17);
+}
+.issue-guide-panel h2 { margin:4px 0 20px; color:#183754; font-size:20px; line-height:1.3; }
+.issue-guide-step { display:grid; grid-template-columns:35px minmax(0,1fr); gap:11px; margin:15px 0; align-items:start; }
+.issue-guide-step>span { display:grid; place-items:center; width:32px; height:32px; border-radius:10px; background:#e4eefb; color:#315f98; font-size:11px; font-weight:900; border:1px solid #cfdeef; }
+.issue-guide-step strong { display:block; color:#183754; font-size:12px; margin:1px 0 4px; }
+.issue-guide-step small { display:block; color:#617891; font-size:11px; line-height:1.6; }
+.issue-status-key { display:flex; flex-wrap:wrap; gap:7px; margin-top:15px; }
+.issue-status-badge,.issue-type-badge {
+  display:inline-flex; align-items:center; width:max-content; max-width:100%;
+  padding:5px 9px; border-radius:999px; font-size:10px; font-weight:800;
+}
+.issue-status-badge.new { background:#fff0d8; color:#7c4b17; border:1px solid #e9cc94; }
+.issue-status-badge.checking { background:#e4efff; color:#244f80; border:1px solid #c7d9f1; }
+.issue-status-badge.resolved { background:#e2f4e9; color:#216346; border:1px solid #b8dfc8; }
+.issue-type-badge { background:#f8edcf; color:#75462e; border:1px solid #e7d09c; }
+.issue-history-panel { margin-top:18px; }
+.issue-history-heading { align-items:center; }
+.issue-history-controls { display:flex; align-items:center; gap:8px; }
+.issue-history-controls select { min-height:38px; max-width:180px; border:1px solid #cbd9e8; border-radius:10px; padding:7px 9px; background:#fffefa; color:#183754; }
+.issue-reports-list { display:grid; gap:13px; }
+.issue-report-card {
+  min-width:0; padding:16px; border:1px solid #d5e1ef; border-radius:17px;
+  background:linear-gradient(145deg,#fffefa,#f2f7fd);
+  box-shadow:0 7px 18px rgba(20,52,84,.045);
+}
+.issue-report-topline { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:13px; }
+.issue-report-main { display:flex; align-items:center; gap:11px; min-width:0; margin-bottom:14px; }
+.issue-report-avatar { display:grid; place-items:center; flex:0 0 42px; width:42px; height:42px; border-radius:13px; background:linear-gradient(145deg,#dceafa,#fff0ce); color:#244f80; font-size:12px; font-weight:900; }
+.issue-report-identity { min-width:0; flex:1; }
+.issue-report-identity strong { display:block; color:#183754; font-size:14px; overflow-wrap:anywhere; }
+.issue-report-identity small { display:block; margin-top:4px; color:#617891; font-size:10px; line-height:1.4; }
+.issue-report-date { color:#60758c; font-size:10px; text-align:right; flex:0 0 auto; }
+.issue-report-details { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:13px; border-radius:12px; background:rgba(226,237,250,.65); border:1px solid #dce7f4; }
+.issue-report-details>div { min-width:0; }
+.issue-report-details .wide { grid-column:1/-1; }
+.issue-report-details small { display:block; color:#617891; font-size:10px; margin-bottom:4px; }
+.issue-report-details strong { display:block; color:#183754; font-size:12px; overflow-wrap:anywhere; }
+.issue-report-details p { margin:0; color:#314d68; font-size:12px; line-height:1.6; overflow-wrap:anywhere; white-space:pre-wrap; }
+.issue-photo-link { display:flex; align-items:center; gap:11px; margin-top:12px; padding:8px; border:1px solid #d8e4f0; border-radius:12px; background:#fff; color:#285783; text-decoration:none; font-size:11px; font-weight:800; }
+.issue-photo-thumb { width:62px; height:62px; flex:0 0 62px; object-fit:cover; border-radius:9px; border:1px solid #d3deeb; }
+.issue-no-photo { margin-top:12px; padding:10px 12px; border-radius:11px; background:#f5f7fa; color:#7b8ba0; font-size:10px; }
+.issue-report-actions { display:flex; align-items:end; flex-wrap:wrap; gap:8px; margin-top:13px; padding-top:12px; border-top:1px solid #e1e9f2; }
+.issue-status-control { display:grid; gap:5px; flex:1 1 155px; }
+.issue-status-control span { font-size:10px; font-weight:800; color:#526b85; }
+.issue-status-control select { min-height:38px; width:100%; border:1px solid #cbd9e8; border-radius:10px; padding:7px 9px; background:#fffefa; color:#183754; }
+.btn-whatsapp { background:linear-gradient(145deg,#21895f,#126c49)!important; color:#fff!important; border:1px solid #126c49!important; box-shadow:0 5px 12px rgba(18,108,73,.15)!important; }
+.btn-whatsapp:hover { filter:brightness(1.04); transform:translateY(-1px); }
+.issue-photo-preview { display:flex; gap:13px; align-items:center; padding:11px; margin:-3px 0 15px; border:1px solid #cfdeef; border-radius:14px; background:linear-gradient(145deg,#fffefa,#edf4fc); }
+.issue-photo-preview img { width:100px; height:100px; object-fit:cover; border-radius:11px; border:1px solid #d2deeb; }
+.issue-photo-preview>div { display:grid; gap:6px; min-width:0; }
+.issue-photo-preview strong { color:#183754; font-size:12px; overflow-wrap:anywhere; }
+.issue-photo-preview small { color:#617891; font-size:10px; line-height:1.5; }
+.issue-load-error { padding:18px; border:1px dashed #d6b16c; border-radius:14px; background:#fff8e8; color:#654b2e; }
+.issue-load-error strong { display:block; color:#75462e; margin-bottom:7px; }
+.issue-load-error p { color:#654b2e; font-size:12px; line-height:1.6; margin:0; }
+
+@media screen and (max-width:850px) {
+  .issue-entry-card { grid-template-columns:42px minmax(0,1fr); gap:12px; padding:14px; }
+  .issue-entry-icon { width:40px; height:40px; border-radius:13px; font-size:20px; }
+  .issue-entry-copy strong { font-size:12px; line-height:1.5; }
+  .issue-entry-copy p { font-size:11px; }
+  .issue-entry-card .btn { grid-column:1/-1; width:100%; }
+  .issue-layout { grid-template-columns:minmax(0,1fr); gap:13px; }
+  .issue-guide-panel { order:2; }
+  .issue-history-panel { margin-top:14px; }
+  .issue-history-heading { align-items:stretch; flex-direction:column; }
+  .issue-history-controls { width:100%; }
+  .issue-history-controls select { flex:1; min-width:0; max-width:none; }
+  .issue-report-card { padding:13px; border-radius:15px; }
+  .issue-report-main { align-items:flex-start; flex-wrap:wrap; }
+  .issue-report-date { margin-left:auto; }
+  .issue-report-actions .btn { flex:1 1 auto; }
+  .issue-photo-preview img { width:84px; height:84px; }
+}
+@media screen and (max-width:380px) {
+  .issue-report-details { padding:10px; gap:9px; }
+  .issue-report-details strong { font-size:11px; }
+  .issue-report-actions .btn { font-size:10px; padding:9px 10px; }
+  .issue-photo-preview img { width:72px; height:72px; }
+}
+
+/* FINAL OVERRIDE — seven mobile menu items, Input is the exact middle item */
+@media screen and (max-width: 850px) {
+  body.app-authenticated #mobileBottomNav {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    height: 76px !important;
+    padding: 6px 4px 5px !important;
+    gap: 1px !important;
+    align-items: center !important;
+    justify-items: stretch !important;
+  }
+
+  #mobileBottomNav .nav-item {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 55px !important;
+    min-height: 55px !important;
+    margin: 0 !important;
+    padding: 3px 0 2px !important;
+    transform: none !important;
+    gap: 3px !important;
+    font-size: clamp(5.8px, 1.72vw, 7.1px) !important;
+    letter-spacing: -.035em !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+
+  #mobileBottomNav .nav-item[data-view="dashboard"] { grid-column: 1 !important; }
+  #mobileBottomNav .nav-item[data-view="santri"] { grid-column: 2 !important; }
+  #mobileBottomNav .nav-item[data-view="tahap"] { grid-column: 3 !important; }
+  #mobileBottomNav .nav-item[data-view="input"] { grid-column: 4 !important; }
+  #mobileBottomNav .nav-item[data-view="masalah"] { grid-column: 5 !important; }
+  #mobileBottomNav .nav-item[data-view="laporan"] { grid-column: 6 !important; }
+  #mobileBottomNav .nav-item[data-view="pengaturan"] { grid-column: 7 !important; }
+
+  #mobileBottomNav .nav-icon {
+    width: 21px !important;
+    height: 21px !important;
+    font-size: 17px !important;
+  }
+  #mobileBottomNav .mobile-nav-label {
+    display: block !important;
+    width: 100% !important;
+    font-size: inherit !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    letter-spacing: inherit !important;
+    overflow: visible !important;
+  }
+
+  /* The fourth button stays inside the grid and grows from the center. */
+  #mobileBottomNav .nav-item[data-view="input"] {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    justify-self: center !important;
+    align-self: center !important;
+    width: min(52px, calc(100% + 6px)) !important;
+    max-width: calc(100% + 6px) !important;
+    height: 65px !important;
+    min-height: 65px !important;
+    margin: 0 !important;
+    padding: 5px 1px 4px !important;
+    transform: translateY(-5px) !important;
+    z-index: 5 !important;
+    border: 1px solid rgba(255,255,255,.98) !important;
+    border-radius: 17px !important;
+    background: linear-gradient(150deg, #ad6b47 0%, #87452f 72%, #713927 100%) !important;
+    color: #fffaf1 !important;
+    box-shadow: 0 8px 18px rgba(103,57,35,.29), 0 0 0 3px rgba(225,194,126,.94), inset 0 1px 0 rgba(255,255,255,.28) !important;
+    animation: silasInputCenterPop .34s cubic-bezier(.2,.8,.2,1) both !important;
+    overflow: visible !important;
+  }
+  #mobileBottomNav .nav-item[data-view="input"] .nav-icon {
+    width: 34px !important;
+    height: 32px !important;
+    border-radius: 11px !important;
+    background: linear-gradient(145deg, #fff1cf, #e5c47b) !important;
+    color: #80442d !important;
+    font-size: 27px !important;
+    font-weight: 500 !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.85), 0 3px 7px rgba(62,33,20,.16) !important;
+  }
+  #mobileBottomNav .nav-item[data-view="input"] .mobile-nav-label {
+    color: #fffaf1 !important;
+    font-size: 7px !important;
+    font-weight: 900 !important;
+    letter-spacing: .035em !important;
+  }
+  #mobileBottomNav .nav-item[data-view="input"].active {
+    background: linear-gradient(150deg, #ad6b47, #7f402d) !important;
+    color: #fffaf1 !important;
+  }
+}
+@media screen and (max-width: 360px) {
+  body.app-authenticated #mobileBottomNav {
+    left: 3px !important;
+    right: 3px !important;
+    padding-left: 3px !important;
+    padding-right: 3px !important;
+    gap: 0 !important;
+  }
+  #mobileBottomNav .nav-item {
+    font-size: 5.6px !important;
+    letter-spacing: -.045em !important;
+  }
+  #mobileBottomNav .nav-icon {
+    width: 19px !important;
+    height: 19px !important;
+    font-size: 16px !important;
+  }
+  #mobileBottomNav .nav-item[data-view="input"] {
+    width: min(47px, calc(100% + 6px)) !important;
+    height: 62px !important;
+    min-height: 62px !important;
+  }
+}
+@keyframes silasInputCenterPop {
+  from { opacity: .7; transform: translateY(1px) scale(.94); }
+  to { opacity: 1; transform: translateY(-5px) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #mobileBottomNav .nav-item[data-view="input"] { animation: none !important; }
 }
 
 /* =========================================================

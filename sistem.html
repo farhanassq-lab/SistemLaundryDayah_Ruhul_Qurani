@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#172554">
   <meta name="description" content="SILAS — Sistem Informasi Laundry Santri Dayah">
   <title>SILAS — Laundry Santri Dayah</title>
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=silas-mobile-7nav-wa-20261022">
 </head>
 <body>
   <div id="configWarning" class="config-warning hidden">
@@ -62,6 +62,7 @@
         <button class="nav-item" data-view="santri"><span class="nav-icon">♙</span> Data santri</button>
         <button class="nav-item" data-view="tahap"><span class="nav-icon">▣</span> Periode & tahap</button>
         <button class="nav-item" data-view="laporan"><span class="nav-icon">▤</span> Laporan</button>
+        <button class="nav-item" data-view="masalah"><span class="nav-icon">⚠</span> Laporan masalah</button>
         <button class="nav-item" data-view="pengaturan"><span class="nav-icon">⚙</span> Pengaturan laporan</button>
       </nav>
       <div class="sidebar-foot">
@@ -174,7 +175,126 @@
 
       <section id="view-laporan" class="view-section hidden">
         <div class="page-heading"><div><p class="eyebrow">REKAPITULASI</p><h1>Laporan laundry</h1><p class="muted">Satu PDF lanskap berisi Tahap 1–8 dan total berat per santri, kamar, serta jenjang.</p></div></div>
+        <article class="panel issue-entry-card">
+          <div class="issue-entry-icon">⚠</div>
+          <div class="issue-entry-copy"><strong>Ada pakaian hilang, rusak, tertukar, atau kurang bersih?</strong><p class="muted">Buat laporan beserta foto bukti dan siapkan pesan untuk grup WhatsApp laundry.</p></div>
+          <button class="btn btn-primary" type="button" data-goto="masalah">＋ Buat laporan masalah</button>
+        </article>
         <div class="report-layout"><article class="panel form-panel"><div class="panel-heading"><div><h2>Buat laporan periode</h2><p class="muted">PDF A4 lanskap dengan kop surat, logo di kiri dan kanan, lalu rekap jenjang → kamar → santri.</p></div><div class="report-icon">▤</div></div><form id="reportForm"><div class="field"><label for="reportPeriod">Pilih periode *</label><select id="reportPeriod" required><option value="">Pilih periode</option></select></div><div class="report-includes"><strong>Isi laporan</strong><div>✓ Kop surat dapat diedit melalui Pengaturan</div><div>✓ Logo Laundry di kiri dan logo Dayah di kanan</div><div>✓ Kolom Tahap 1–8 dan total otomatis</div><div>✓ Rekap jenjang → kamar → santri dalam satu PDF</div></div><div id="reportMessage" class="inline-message hidden" role="status"></div><button class="btn btn-primary btn-wide" type="submit">Buat dan unduh PDF <span>↓</span></button></form></article><aside class="panel helper-panel"><div class="helper-icon">▤</div><h3>Rekap otomatis</h3><p class="muted">Data dikelompokkan berdasarkan jenjang dan kamar yang tersimpan saat laundry dicatat. Perpindahan kamar di masa depan tidak mengubah riwayat lama.</p><div class="notice-box"><strong>Jumlah pakaian</strong><p>Kolom pakaian boleh kosong. Laporan akan menjumlahkan hanya angka yang benar-benar dicatat.</p></div></aside></div>
+      </section>
+
+      <section id="view-masalah" class="view-section hidden">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">OPERASIONAL LAUNDRY</p>
+            <h1>Laporan Masalah Laundry</h1>
+            <p class="muted">Catat pakaian hilang, rusak, tertukar, kurang bersih, atau masalah lain. Foto dan pesan WhatsApp disiapkan dari halaman ini.</p>
+          </div>
+          <span class="pill pill-blue">Foto bukti · WhatsApp</span>
+        </div>
+
+        <div class="issue-layout">
+          <article class="panel form-panel issue-form-panel">
+            <div class="panel-heading">
+              <div><h2>Buat laporan baru</h2><p class="muted">Pilih santri dari saran agar jenjang dan kamar terisi otomatis.</p></div>
+              <div class="issue-form-icon">✦</div>
+            </div>
+            <form id="issueForm">
+              <div class="field">
+                <label for="issueType">Jenis masalah *</label>
+                <select id="issueType" required>
+                  <option value="hilang">Pakaian hilang</option>
+                  <option value="rusak">Pakaian rusak</option>
+                  <option value="tidak_bersih">Pakaian tidak bersih / masih bernoda</option>
+                  <option value="tertukar">Pakaian tertukar</option>
+                  <option value="jumlah_kurang">Jumlah pakaian kurang</option>
+                  <option value="basah">Pakaian masih basah</option>
+                  <option value="bau">Pakaian berbau tidak sedap</option>
+                  <option value="lainnya">Masalah lainnya</option>
+                </select>
+              </div>
+              <div class="field autocomplete-field">
+                <label for="issueStudentSearch">Nama santri *</label>
+                <input id="issueStudentSearch" type="search" autocomplete="off" placeholder="Ketik nama atau NIS santri…" required>
+                <div id="issueStudentSuggestions" class="suggestions hidden"></div>
+                <small class="field-help">Hanya santri aktif yang memiliki kamar ditampilkan.</small>
+              </div>
+              <div id="issueStudentBio" class="bio-card hidden"></div>
+
+              <div class="form-row two-col">
+                <div class="field">
+                  <label for="issueItemName">Nama / jenis pakaian *</label>
+                  <input id="issueItemName" maxlength="160" required placeholder="Contoh: baju koko putih">
+                </div>
+                <div class="field">
+                  <label for="issueQuantity">Jumlah pakaian *</label>
+                  <input id="issueQuantity" type="number" min="1" max="100" step="1" value="1" required>
+                </div>
+              </div>
+              <div class="form-row two-col">
+                <div class="field">
+                  <label for="issueDate">Tanggal ditemukan *</label>
+                  <input id="issueDate" type="date" required>
+                </div>
+                <div class="field">
+                  <label for="issueStage">Tahap laundry (opsional)</label>
+                  <select id="issueStage"><option value="">Tidak diketahui / tidak terkait tahap</option></select>
+                </div>
+              </div>
+              <div class="field">
+                <label for="issueDescription">Keterangan masalah *</label>
+                <textarea id="issueDescription" rows="4" maxlength="1200" required placeholder="Jelaskan ciri pakaian, bagian yang rusak / bernoda, atau kronologi singkat…"></textarea>
+              </div>
+              <div class="field">
+                <label for="issuePhoto">Foto bukti (opsional)</label>
+                <input id="issuePhoto" type="file" accept="image/jpeg,image/png,image/webp" capture="environment">
+                <small class="field-help">Foto JPG, PNG, atau WebP maksimal 5 MB. Di HP, browser dapat menawarkan kamera atau galeri.</small>
+              </div>
+              <div id="issuePhotoPreview" class="issue-photo-preview hidden">
+                <img id="issuePhotoPreviewImage" alt="Pratinjau foto bukti laporan">
+                <div><strong id="issuePhotoName">Foto bukti</strong><small>Foto ini akan disimpan secara privat di Supabase.</small><button type="button" id="clearIssuePhotoBtn" class="btn btn-light btn-sm">Hapus foto</button></div>
+              </div>
+              <div id="issueMessage" class="inline-message hidden" role="status"></div>
+              <div class="form-actions">
+                <button class="btn btn-light" type="reset">Kosongkan</button>
+                <button id="saveIssueBtn" class="btn btn-primary" type="submit">Simpan laporan <span>↗</span></button>
+              </div>
+            </form>
+          </article>
+
+          <aside class="panel helper-panel issue-guide-panel">
+            <div class="issue-guide-emblem">和</div>
+            <p class="eyebrow">ALUR PENANGANAN</p>
+            <h2>Catat · Buktikan · Tindak lanjuti</h2>
+            <div class="issue-guide-step"><span>01</span><div><strong>Catat masalah</strong><small>Nama santri, pakaian, jumlah, tanggal, dan keterangan.</small></div></div>
+            <div class="issue-guide-step"><span>02</span><div><strong>Tambahkan foto</strong><small>Foto membantu petugas memeriksa kondisi pakaian dengan lebih jelas.</small></div></div>
+            <div class="issue-guide-step"><span>03</span><div><strong>Bagikan ke WhatsApp</strong><small>SILAS menyiapkan pesan. Petugas tetap memilih grup dan menekan kirim sendiri.</small></div></div>
+            <div class="notice-box"><strong>Privasi foto</strong><p>Foto disimpan di bucket privat. Hanya pengguna yang login dan memiliki akses SILAS yang dapat membukanya.</p></div>
+            <div class="issue-status-key">
+              <span class="issue-status-badge new">Baru dilaporkan</span>
+              <span class="issue-status-badge checking">Sedang diperiksa</span>
+              <span class="issue-status-badge resolved">Selesai</span>
+            </div>
+          </aside>
+        </div>
+
+        <article class="panel table-panel issue-history-panel">
+          <div class="panel-heading issue-history-heading">
+            <div><h2>Riwayat laporan masalah</h2><p class="muted">Ubah status setelah laporan ditangani. Daftar terbaru tampil paling atas.</p></div>
+            <div class="issue-history-controls">
+              <select id="issueStatusFilter" aria-label="Filter status laporan">
+                <option value="">Semua status</option>
+                <option value="baru">Baru dilaporkan</option>
+                <option value="diperiksa">Sedang diperiksa</option>
+                <option value="selesai">Selesai</option>
+              </select>
+              <button id="refreshIssueReportsBtn" class="btn btn-light btn-sm" type="button">↻ Muat ulang</button>
+            </div>
+          </div>
+          <div id="issueReportsList" class="issue-reports-list">
+            <div class="empty-state">Buka halaman ini untuk memuat laporan masalah.</div>
+          </div>
+        </article>
       </section>
 
       <section id="view-pengaturan" class="view-section hidden">
@@ -214,28 +334,14 @@
       <footer class="app-footer"><span>SILAS · Sistem Informasi Laundry Santri</span><span>Data tersimpan di Supabase</span></footer>
     </main>
   </div>
-
-  <!-- Navigasi HP terpisah dari sidebar agar selalu menempel di viewport.
-       Tombol memakai data-view/nav-item yang sama sehingga handler app.js tetap digunakan. -->
-  <nav id="mobileBottomNav" class="mobile-bottom-nav hidden" aria-label="Navigasi utama HP">
-    <button type="button" class="nav-item active" data-view="dashboard" aria-label="Dashboard" title="Dashboard">
-      <span class="nav-icon" aria-hidden="true">▦</span><span class="mobile-nav-label">Dashboard</span>
-    </button>
-    <button type="button" class="nav-item" data-view="santri" aria-label="Data santri" title="Data santri">
-      <span class="nav-icon" aria-hidden="true">♙</span><span class="mobile-nav-label">Santri</span>
-    </button>
-    <button type="button" class="nav-item" data-view="input" aria-label="Input laundry" title="Input laundry">
-      <span class="nav-icon" aria-hidden="true">＋</span><span class="mobile-nav-label">Tambah</span>
-    </button>
-    <button type="button" class="nav-item" data-view="tahap" aria-label="Periode dan tahap" title="Periode & tahap">
-      <span class="nav-icon" aria-hidden="true">▣</span><span class="mobile-nav-label">Tahap</span>
-    </button>
-    <button type="button" class="nav-item" data-view="laporan" aria-label="Laporan" title="Laporan">
-      <span class="nav-icon" aria-hidden="true">▤</span><span class="mobile-nav-label">Laporan</span>
-    </button>
-    <button type="button" class="nav-item" data-view="pengaturan" aria-label="Pengaturan laporan" title="Pengaturan laporan">
-      <span class="nav-icon" aria-hidden="true">⚙</span><span class="mobile-nav-label">Setelan</span>
-    </button>
+  <nav id="mobileBottomNav" class="mobile-bottom-nav" aria-label="Navigasi utama HP">
+    <button class="nav-item active" data-view="dashboard" aria-label="Dashboard" title="Dashboard"><span class="nav-icon">▦</span><span class="mobile-nav-label">Dashboard</span></button>
+    <button class="nav-item" data-view="santri" aria-label="Data santri" title="Data santri"><span class="nav-icon">♙</span><span class="mobile-nav-label">Santri</span></button>
+    <button class="nav-item" data-view="tahap" aria-label="Periode dan tahap" title="Periode & tahap"><span class="nav-icon">▣</span><span class="mobile-nav-label">Tahap</span></button>
+    <button class="nav-item mobile-nav-primary" data-view="input" aria-label="Input laundry" title="Input laundry"><span class="nav-icon">＋</span><span class="mobile-nav-label">INPUT</span></button>
+    <button class="nav-item" data-view="masalah" aria-label="Laporan masalah" title="Laporan masalah"><span class="nav-icon">⚠</span><span class="mobile-nav-label">Masalah</span></button>
+    <button class="nav-item" data-view="laporan" aria-label="Laporan laundry" title="Laporan laundry"><span class="nav-icon">▤</span><span class="mobile-nav-label">Laporan</span></button>
+    <button class="nav-item" data-view="pengaturan" aria-label="Pengaturan laporan" title="Pengaturan"><span class="nav-icon">⚙</span><span class="mobile-nav-label">Setelan</span></button>
   </nav>
   <div id="dashboardDoorTransition" class="dashboard-door-transition hidden" aria-hidden="true">
     <div class="dashboard-door-panel dashboard-door-left" aria-hidden="true"></div>
@@ -249,6 +355,6 @@
     <span class="dashboard-door-seam" aria-hidden="true"></span>
   </div>
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
-  <script type="module" src="./app.js"></script>
+  <script type="module" src="./app.js?v=silas-mobile-7nav-wa-20261022"></script>
 </body>
 </html>
