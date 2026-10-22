@@ -3141,3 +3141,197 @@ input, select, textarea { max-width: 100%; }
     transition: none !important;
   }
 }
+
+/* =========================================================
+   SILAS — MOBILE NAV ISOLATION FIX (FINAL)
+   Navigasi HP diletakkan sebagai saudara appShell, bukan anak sidebar.
+   Handler .nav-item/data-view yang sudah ada tetap digunakan oleh app.js.
+   ========================================================= */
+.mobile-bottom-nav { display: none !important; }
+
+@media screen and (max-width: 850px) {
+  /* Sidebar desktop tidak dipakai pada HP; menu khusus HP berdiri sendiri. */
+  #sidebar.sidebar { display: none !important; }
+  .mobile-menu-btn { display: none !important; }
+
+  #mobileBottomNav {
+    display: none !important;
+    position: fixed !important;
+    z-index: 1000 !important;
+    left: max(6px, env(safe-area-inset-left, 0px)) !important;
+    right: max(6px, env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(7px + env(safe-area-inset-bottom, 0px)) !important;
+    width: auto !important;
+    max-width: 620px !important;
+    height: 70px !important;
+    max-height: 70px !important;
+    margin: 0 auto !important;
+    padding: 7px 5px 5px !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    align-items: center !important;
+    justify-items: stretch !important;
+    gap: 2px !important;
+    border: 1px solid #c9d7e8 !important;
+    border-top: 2px solid #d8b56e !important;
+    border-radius: 20px !important;
+    background: radial-gradient(circle at 43% 0%, rgba(236, 213, 167, .55), transparent 43%),
+                linear-gradient(145deg, rgba(255, 254, 250, .99), rgba(231, 240, 251, .99)) !important;
+    box-shadow: 0 12px 30px rgba(17, 43, 72, .22),
+                inset 0 1px 0 rgba(255, 255, 255, .96) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.12) !important;
+    backdrop-filter: blur(18px) saturate(1.12) !important;
+    overflow: visible !important;
+    pointer-events: auto !important;
+    isolation: isolate !important;
+    transform: none !important;
+  }
+
+  /* Tampilkan dock hanya ketika appShell sudah terbuka setelah login.
+     Selector sengaja lebih spesifik daripada .hidden { display:none!important }. */
+  #appShell:not(.hidden) ~ #mobileBottomNav { display: grid !important; }
+
+  #mobileBottomNav::before {
+    content: "" !important;
+    position: absolute !important;
+    top: -2px !important;
+    left: 33% !important;
+    width: 34% !important;
+    height: 2px !important;
+    border-radius: 0 0 4px 4px !important;
+    background: linear-gradient(90deg, #8f4e31, #e3c27e, #b94e46) !important;
+    pointer-events: none !important;
+  }
+
+  #mobileBottomNav .nav-item {
+    display: flex !important;
+    position: relative !important;
+    z-index: 1 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 53px !important;
+    min-height: 53px !important;
+    margin: 0 !important;
+    padding: 4px 1px 3px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    border: 1px solid transparent !important;
+    border-radius: 12px !important;
+    background: transparent !important;
+    color: #36516f !important;
+    font-size: clamp(6.5px, 2vw, 8.5px) !important;
+    font-weight: 800 !important;
+    line-height: 1.08 !important;
+    letter-spacing: -.025em !important;
+    text-align: center !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    box-shadow: none !important;
+    transform: none !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  #mobileBottomNav .nav-icon {
+    display: grid !important;
+    place-items: center !important;
+    flex: 0 0 auto !important;
+    width: 23px !important;
+    height: 22px !important;
+    margin: 0 !important;
+    color: #315f98 !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+  }
+
+  #mobileBottomNav .mobile-nav-label {
+    display: block !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+    font-size: inherit !important;
+    line-height: 1.1 !important;
+  }
+
+  #mobileBottomNav .nav-item.active {
+    color: #173e67 !important;
+    background: linear-gradient(145deg, #e6f0fc, #fbf5e8) !important;
+    border-color: #d5e1ef !important;
+    box-shadow: inset 0 -2px 0 #b94e46 !important;
+  }
+  #mobileBottomNav .nav-item.active .nav-icon { color: #a65337 !important; }
+
+  /* Tombol TAMBAH mendapat aksen cokelat-emas pada slot ketiga. */
+  #mobileBottomNav .nav-item[data-view="input"] {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    height: 62px !important;
+    min-height: 62px !important;
+    margin-top: -11px !important;
+    padding: 5px 1px !important;
+    border: 1px solid rgba(255, 255, 255, .98) !important;
+    border-radius: 17px !important;
+    background: linear-gradient(150deg, #a86442 0%, #87452f 72%, #713927 100%) !important;
+    color: #fffaf1 !important;
+    box-shadow: 0 7px 16px rgba(103, 57, 35, .26),
+                0 0 0 3px rgba(225, 194, 126, .9),
+                inset 0 1px 0 rgba(255, 255, 255, .28) !important;
+  }
+  #mobileBottomNav .nav-item[data-view="input"] .nav-icon {
+    width: 32px !important;
+    height: 30px !important;
+    border-radius: 10px !important;
+    background: linear-gradient(145deg, #fff1cf, #e5c47b) !important;
+    color: #80442d !important;
+    font-size: 24px !important;
+    font-weight: 500 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .85),
+                0 3px 7px rgba(62, 33, 20, .16) !important;
+  }
+  #mobileBottomNav .nav-item[data-view="input"] .mobile-nav-label {
+    color: #fffaf1 !important;
+    font-weight: 900 !important;
+    letter-spacing: .04em !important;
+  }
+  #mobileBottomNav .nav-item[data-view="input"]::after {
+    content: "TAMBAH" !important;
+    position: absolute !important;
+    top: -9px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    display: block !important;
+    width: max-content !important;
+    padding: 3px 6px !important;
+    border: 1px solid #e8cf98 !important;
+    border-radius: 7px !important;
+    background: #f8edcf !important;
+    color: #79412d !important;
+    font-size: 7px !important;
+    font-weight: 900 !important;
+    line-height: 1.2 !important;
+    letter-spacing: .045em !important;
+    box-shadow: 0 3px 7px rgba(30, 47, 67, .12) !important;
+    pointer-events: none !important;
+  }
+
+  body { padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important; }
+}
+
+@media screen and (max-width: 360px) {
+  #mobileBottomNav { left: 4px !important; right: 4px !important; padding-left: 3px !important; padding-right: 3px !important; gap: 1px !important; }
+  #mobileBottomNav .nav-item { font-size: 6.2px !important; letter-spacing: -.04em !important; }
+  #mobileBottomNav .nav-icon { width: 20px !important; height: 20px !important; font-size: 17px !important; }
+  #mobileBottomNav .nav-item[data-view="input"] { height: 59px !important; min-height: 59px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #mobileBottomNav .nav-item { animation: none !important; transition: none !important; }
+}
+
