@@ -252,9 +252,7 @@ function setView(view) {
   state.currentView = view;
   $$('.view-section').forEach(section => section.classList.toggle('hidden', section.id !== `view-${view}`));
   $$('.nav-item').forEach(item => {
-    const isMobileDock = Boolean(item.closest('#mobileBottomNav'));
-    const activeView = view === 'masalah' && isMobileDock ? 'laporan' : view;
-    item.classList.toggle('active', item.dataset.view === activeView);
+    item.classList.toggle('active', item.dataset.view === view);
   });
   const names = {dashboard:'Dashboard', input:'Input laundry', santri:'Data santri', tahap:'Periode & tahap', laporan:'Laporan', masalah:'Laporan masalah', pengaturan:'Pengaturan laporan'};
   $('#pageBreadcrumb').textContent = names[view] || 'Dashboard';
@@ -1142,32 +1140,64 @@ function buildIssueWhatsAppMessage(issue) {
   const typeLabel = ISSUE_TYPE_LABELS[issue.jenis_masalah] || 'Masalah laundry';
   const stage = state.stages.find(item => item.id === issue.tahap_id);
   const period = stage ? state.periods.find(item => item.id === stage.periode_id) : null;
-  const stageLabel = stage ? `${periodLabel(period)} · Tahap ${Number(stage.nomor_tahap)} · ${dateLabel(stage.tanggal_laundry)}` : 'Tidak dicantumkan';
-  return [
-    '📋 LAPORAN MASALAH LAUNDRY — SILAS',
+  const stageLabel = stage
+    ? `${periodLabel(period)} · Tahap ${Number(stage.nomor_tahap)} · ${dateLabel(stage.tanggal_laundry)}`
+    : 'Belum ditentukan';
+
+  const followUpByType = {
+    hilang: 'Boleh bantu cek apakah pakaian ini tertinggal atau tercampur dengan cucian lain, ya?',
+    rusak: 'Mohon bantuannya untuk mengecek kondisi pakaian ini dan memberi kabar tindak lanjutnya, ya.',
+    tidak_bersih: 'Mohon bantuannya untuk mengecek dan, jika memungkinkan, mencuci ulang pakaian ini, ya.',
+    tertukar: 'Boleh bantu cek kembali dan mencocokkan pakaian ini dengan pemiliknya, ya?',
+    jumlah_kurang: 'Mohon bantuannya untuk mengecek kembali jumlah pakaian pada proses ini, ya.',
+    basah: 'Mohon bantuannya untuk memeriksa dan memastikan pakaian dikeringkan dengan baik, ya.',
+    bau: 'Mohon bantuannya untuk mengecek penyebab bau dan menindaklanjuti bila perlu, ya.',
+    lainnya: 'Mohon bantuannya untuk mengecek dan menindaklanjuti masalah ini, ya.'
+  };
+
+  const lines = [
+    '🧺 *LAPORAN MASALAH LAUNDRY*',
     '',
-    'Assalamu’alaikum warahmatullahi wabarakatuh.',
+    'Assalamu’alaikum, teman-teman. Izin info ada temuan laundry, ya.',
     '',
-    'Izin melaporkan temuan pada proses laundry:',
-    '',
-    `• Jenis masalah: ${typeLabel}`,
-    `• Nama santri: ${issue.santri_nama_snapshot}`,
+    '👤 *DATA SANTRI*',
+    `• Nama: ${issue.santri_nama_snapshot || '-'}`,
     `• Jenjang: ${issue.jenjang_nama_snapshot || '-'}`,
     `• Kamar: ${issue.kamar_nama_snapshot || '-'}`,
-    `• Pakaian: ${issue.nama_pakaian}`,
+    '',
+    '👕 *DETAIL PAKAIAN*',
+    `• Masalah: ${typeLabel}`,
+    `• Pakaian: ${issue.nama_pakaian || '-'}`,
     `• Jumlah: ${Number(issue.jumlah_pakaian || 0)} potong`,
     `• Tanggal ditemukan: ${dateLabel(issue.tanggal_ditemukan)}`,
-    `• Tahap laundry: ${stageLabel}`,
-    `• Keterangan: ${issue.deskripsi}`,
+    `• Periode/tahap: ${stageLabel}`,
     '',
-    issue.foto_path ? '📸 Foto bukti ikut dibagikan jika WhatsApp mendukung berbagi foto.' : '',
-    'Mohon bantuan petugas untuk memeriksa dan menindaklanjuti laporan ini.',
-    '',
-    'Terima kasih.',
-    'Wassalamu’alaikum warahmatullahi wabarakatuh.'
-  ].filter(Boolean).join('\n');
-}
+    '📝 *KETERANGAN*',
+    issue.deskripsi || 'Tidak ada keterangan tambahan.'
+  ];
 
+  if (issue.foto_path) {
+    lines.push(
+      '',
+      '📷 *Foto bukti:* Tersedia di laporan SILAS. Kalau belum ikut terkirim, mohon lampirkan foto saat mengirim pesan ini.'
+    );
+  } else {
+    lines.push('', '📷 *Foto bukti:* Belum dilampirkan.');
+  }
+
+  lines.push(
+    '',
+    '🙏 *Mohon bantuan:*',
+    followUpByType[issue.jenis_masalah] || followUpByType.lainnya,
+    '',
+    'Kalau sudah dicek, boleh kabari di grup ini ya supaya tindak lanjutnya bisa dicatat.',
+    '',
+    'Terima kasih banyak, teman-teman.',
+    'Wassalamu’alaikum warahmatullahi wabarakatuh.'
+  );
+
+  return lines.join('\n');
+}
 async function shareIssueReportToWhatsApp(issueId, button) {
   const issue = state.issueReports.find(item => String(item.id) === String(issueId));
   if (!issue) return showToast('Laporan tidak ditemukan. Muat ulang daftar dan coba lagi.', 'error');
