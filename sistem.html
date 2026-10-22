@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#172554">
+  <meta name="description" content="SILAS — Sistem Informasi Laundry Santri Dayah">
+  <title>SILAS — Laundry Santri Dayah</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="configWarning" class="config-warning hidden">
+    <div class="config-card">
+      <div class="brand-mark large">S</div>
+      <p class="eyebrow">KONFIGURASI AWAL</p>
+      <h1>Hubungkan SILAS ke Supabase</h1>
+      <p>Isi URL project dan publishable key Supabase di file <code>supabase-config.js</code>, lalu muat ulang halaman.</p>
+      <a class="btn btn-primary" href="https://supabase.com/dashboard" target="_blank" rel="noreferrer">Buka Supabase</a>
+    </div>
+  </div>
+
+  <section id="authScreen" class="auth-screen hidden">
+    <div class="auth-art">
+      <div class="auth-art-overlay"></div>
+      <div class="auth-brand">
+        <img class="brand-logo" src="./assets/logo-ruhul-qurani.png" alt="Logo Ruhul Qur'ani">
+        <div><div class="brand-title">SILAS</div><div class="brand-subtitle">Sistem Informasi Laundry Santri</div></div>
+      </div>
+      <div class="auth-message">
+        <span class="eyebrow light">DAYAH · ADMINISTRASI LAUNDRY</span>
+        <h1>Pencatatan lebih mudah.<br><em>Laporan lebih rapi.</em></h1>
+        <p>Kelola data santri dan catatan laundry dari satu tempat, langsung melalui HP atau laptop.</p>
+      </div>
+      <div class="auth-bottom">SILAS · Sistem internal dayah</div>
+    </div>
+    <div class="auth-panel">
+      <form id="loginForm" class="auth-form">
+        <span class="eyebrow">SELAMAT DATANG</span>
+        <h2>Masuk ke SILAS</h2>
+        <p class="muted">Gunakan akun petugas yang telah dibuat oleh pengelola.</p>
+        <label for="loginEmail">Email</label>
+        <input id="loginEmail" type="email" autocomplete="username" placeholder="petugas@dayah.id" required>
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Masukkan password" required>
+        <button class="btn btn-primary btn-wide" type="submit">Masuk <span aria-hidden="true">→</span></button>
+        <p id="loginError" class="form-error" role="alert"></p>
+        <p class="tiny muted">Akun dibuat oleh administrator melalui Supabase. Pendaftaran umum tidak tersedia.</p>
+      </form>
+    </div>
+  </section>
+
+  <div id="appShell" class="app-shell hidden">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <img class="brand-logo sidebar-logo" src="./assets/logo-ruhul-qurani.png" alt="Logo Ruhul Qur'ani">
+        <div><div class="brand-title">SILAS</div><div class="brand-subtitle">Laundry Santri</div></div>
+      </div>
+      <div class="sidebar-label">MENU UTAMA</div>
+      <nav class="nav-list" aria-label="Menu utama">
+        <button class="nav-item active" data-view="dashboard"><span class="nav-icon">▦</span> Dashboard</button>
+        <button class="nav-item" data-view="input"><span class="nav-icon">＋</span> Input laundry</button>
+        <button class="nav-item" data-view="santri"><span class="nav-icon">♙</span> Data santri</button>
+        <button class="nav-item" data-view="tahap"><span class="nav-icon">▣</span> Periode & tahap</button>
+        <button class="nav-item" data-view="laporan"><span class="nav-icon">▤</span> Laporan</button>
+        <button class="nav-item" data-view="pengaturan"><span class="nav-icon">⚙</span> Pengaturan laporan</button>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="connection-dot"></div><span>Terhubung ke Supabase</span>
+        <button id="logoutBtn" class="logout-btn" title="Keluar">↪</button>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Buka menu">☰</button>
+        <div class="breadcrumb"><span>Dayah</span><span class="crumb-slash">/</span><strong id="pageBreadcrumb">Dashboard</strong></div>
+        <div class="topbar-user"><div class="avatar">P</div><div class="user-meta"><strong id="userEmail">Petugas</strong><span>Petugas laundry</span></div></div>
+      </header>
+
+      <section id="view-dashboard" class="view-section">
+        <section class="brand-hero premium-hero" aria-label="Identitas SILAS Dayah Ruhul Qurani">
+          <div class="brand-hero-photo"></div><div class="brand-hero-shade"></div>
+          <div class="brand-hero-content">
+            <div class="hero-identity">
+              <img class="hero-dayah-logo" src="./assets/logo-ruhul-qurani.png" alt="Logo Dayah Ruhul Qur'ani">
+              <div class="hero-title-block"><div class="hero-kicker">DAYAH RUHUL QUR’ANI</div><h1>SILAS</h1><p>Sistem Informasi Laundry Santri</p><div class="hero-tagline">Bersih Pakaian · Nyaman Ibadah · Semangat Menuntut Ilmu</div></div>
+            </div>
+            <div class="hero-right">
+              <div class="laundry-logo-placeholder premium-laundry-placeholder" id="heroLaundryLogo"><span class="laundry-placeholder-icon">＋</span><div><strong>Logo Laundry BUD_RQ</strong><small>Tambahkan di Pengaturan</small></div></div>
+            </div>
+          </div>
+          <div class="hero-bottom-line"><span>RUHUL QUR’ANI</span><i class="hero-bottom-dot"></i><span>ADMINISTRASI LAUNDRY SANTRI</span></div>
+        </section>
+
+        <div class="dashboard-intro-grid">
+        <section class="welcome-photo-card" aria-label="Santri Dayah Ruhul Qur'ani">
+          <img src="./assets/santri-berkelompok.jpg" alt="Foto santri Dayah Ruhul Qur'ani berkelompok">
+          <div class="welcome-photo-overlay"></div>
+          <div class="welcome-photo-copy">
+            <span class="welcome-chip">SELAMAT DATANG</span>
+            <h2>Assalamu’alaikum, Pengurus Dayah</h2>
+            <p>Kelola pencatatan laundry santri dengan lebih mudah, rapi, dan terdata.</p>
+          </div>
+          <div class="welcome-photo-caption"><span class="caption-dot"></span> Dayah Ruhul Qur’ani</div>
+        </section>
+
+          <section class="director-section director-side-section">
+            <div class="director-section-heading"><div><p class="eyebrow">ARAHAN & MOTIVASI</p><h2>Direktur Badan Usaha Dayah</h2><p class="muted">Pesan dan motivasi untuk pelayanan yang lebih baik.</p></div><span class="director-section-mark">✦</span></div>
+            <article class="director-card" id="directorCard">
+              <div class="director-photo-wrap" id="directorDashboardPhoto">
+                <div class="director-photo-placeholder"><span>DRQ</span><small>Foto direktur<br>ditambahkan melalui Pengaturan</small></div>
+              </div>
+              <div class="director-details">
+                <span class="director-label">PIMPINAN BADAN USAHA</span>
+                <h3 id="directorDashboardName">Nama Direktur</h3>
+                <p class="director-role" id="directorDashboardRole">Direktur Badan Usaha Dayah Ruhul Qur’ani</p>
+                <div class="director-divider"></div>
+                <blockquote id="directorDashboardQuote">“Kebersihan dan kerapian adalah bagian dari pelayanan. Semoga setiap ikhtiar memudahkan santri dalam menuntut ilmu.”</blockquote>
+              </div>
+              <div class="director-card-glow"></div>
+            </article>
+          </section>
+        </div>
+        <div class="page-heading dashboard-heading">
+          <div><p class="eyebrow">RINGKASAN</p><h1>Dashboard</h1><p class="muted">Semua pencatatan laundry dalam satu tempat.</p></div>
+          <button class="btn btn-primary" data-goto="input">＋ Catat laundry</button>
+        </div>
+        <div class="stat-grid">
+          <article class="stat-card premium-stat"><div class="stat-top"><span>Santri aktif</span><span class="stat-icon indigo">♙</span></div><strong id="statSantri">—</strong><small>Terdaftar untuk laundry</small></article>
+          <article class="stat-card premium-stat"><div class="stat-top"><span>Total kamar</span><span class="stat-icon blue">⌂</span></div><strong id="statKamar">—</strong><small>Di seluruh jenjang</small></article>
+          <article class="stat-card premium-stat"><div class="stat-top"><span>Total laundry</span><span class="stat-icon teal">↕</span></div><strong id="statKg">0 kg</strong><small id="statPeriodLabel">Periode terbaru</small></article>
+          <article class="stat-card premium-stat"><div class="stat-top"><span>Tahap tercatat</span><span class="stat-icon amber">▣</span></div><strong id="statTahap">0</strong><small>Memiliki catatan laundry</small></article>
+        </div>
+        <div class="content-grid dashboard-grid dashboard-main-grid">
+          <article class="panel premium-panel dashboard-period-panel"><div class="panel-heading"><div><h2>Periode laundry</h2><p class="muted">Pantau Tahap 1 sampai Tahap 8.</p></div><button class="btn btn-light btn-sm" data-goto="tahap">Kelola tahap</button></div><div id="dashboardStages" class="stage-list"><div class="empty-state">Memuat data…</div></div></article>
+
+        </div>
+        <article class="panel quick-panel premium-panel dashboard-quick-panel"><div class="panel-heading"><div><h2>Akses cepat</h2><p class="muted">Menu yang sering digunakan.</p></div></div><div class="quick-actions-grid"><button class="quick-action" data-goto="input"><span class="quick-icon">＋</span><span><strong>Input laundry</strong><small>Catat berat dan jumlah pakaian</small></span><b>→</b></button><button class="quick-action" data-goto="santri"><span class="quick-icon">♙</span><span><strong>Tambah santri</strong><small>Kelola data santri dan kamar</small></span><b>→</b></button><button class="quick-action" data-goto="laporan"><span class="quick-icon">▤</span><span><strong>Buat laporan PDF</strong><small>Gabungkan rekap semua kamar</small></span><b>→</b></button></div></article>
+      </section>
+
+      <section id="view-input" class="view-section hidden">
+        <div class="page-heading"><div><p class="eyebrow">PENCATATAN</p><h1>Input laundry</h1><p class="muted">Ketik nama santri. Jenjang dan kamar akan muncul otomatis.</p></div></div>
+        <div class="input-layout">
+          <article class="panel form-panel">
+            <div class="panel-heading"><div><h2>Catatan baru</h2><p class="muted">Pilih periode dan tahap, lalu catat santri.</p></div><span class="pill pill-blue">Input cepat</span></div>
+            <form id="laundryForm">
+              <div class="form-row two-col"><div class="field"><label for="inputPeriod">Periode</label><select id="inputPeriod" required><option value="">Pilih periode</option></select></div><div class="field"><label for="inputStage">Tahap laundry</label><select id="inputStage" required><option value="">Pilih tahap</option></select></div></div>
+              <div class="field autocomplete-field"><label for="studentSearch">Nama santri</label><input id="studentSearch" type="search" autocomplete="off" placeholder="Ketik nama atau NIS…" required><div id="studentSuggestions" class="suggestions hidden"></div><small class="field-help">Hanya santri aktif yang memiliki kamar ditampilkan.</small></div>
+              <div id="studentBio" class="bio-card hidden"></div>
+              <div class="form-row two-col"><div class="field"><label for="weightInput">Berat laundry (kg) <span class="required">*</span></label><input id="weightInput" type="number" min="0.01" max="9999" step="0.01" inputmode="decimal" placeholder="Contoh: 3.5" required><small class="field-help">Harus lebih dari 0 kg.</small></div><div class="field"><label for="piecesInput">Jumlah pakaian</label><input id="piecesInput" type="number" min="0" max="100000" step="1" inputmode="numeric" placeholder="Opsional"><small class="field-help">Boleh dikosongkan.</small></div></div>
+              <div id="laundryMessage" class="inline-message hidden" role="status"></div>
+              <div class="form-actions"><button type="reset" class="btn btn-light">Bersihkan</button><button id="saveLaundryBtn" type="submit" class="btn btn-primary">Simpan catatan <span>→</span></button></div>
+            </form>
+          </article>
+          <aside class="panel helper-panel"><div class="helper-icon">✦</div><h3>Catatan otomatis</h3><p class="muted">Biodata diambil dari data santri. Kamu tidak perlu memilih jenjang atau kamar saat mencatat laundry.</p><div class="helper-rule"><span>01</span><div><strong>Pilih santri</strong><small>Gunakan nama atau NIS.</small></div></div><div class="helper-rule"><span>02</span><div><strong>Isi kilogram</strong><small>Jumlah pakaian opsional.</small></div></div><div class="helper-rule"><span>03</span><div><strong>Simpan</strong><small>Catatan masuk ke rekap tahap.</small></div></div><div class="notice-box"><strong>Anti-duplikat</strong><p>Satu santri hanya dapat dicatat sekali pada tahap yang sama.</p></div></aside>
+        </div>
+        <article class="panel table-panel"><div class="panel-heading"><div><h2>Catatan pada tahap ini</h2><p class="muted">Daftar catatan yang sudah disimpan.</p></div><div id="stageTotals" class="total-chip">0 catatan · 0 kg</div></div><div class="table-wrap"><table><thead><tr><th>Nama santri</th><th>Jenjang</th><th>Kamar</th><th>Berat</th><th>Jumlah pakaian</th><th>Waktu input</th><th>Aksi</th></tr></thead><tbody id="stageRecordsBody"><tr><td colspan="7" class="empty-cell">Pilih periode dan tahap.</td></tr></tbody></table></div></article>
+      </section>
+
+      <section id="view-santri" class="view-section hidden">
+        <div class="page-heading"><div><p class="eyebrow">DATA MASTER</p><h1>Data santri</h1><p class="muted">Tambah atau perbarui santri langsung dari web.</p></div><button id="showStudentFormBtn" class="btn btn-primary">＋ Tambah santri</button></div>
+        <article id="studentFormPanel" class="panel form-panel hidden"><div class="panel-heading"><div><h2 id="studentFormTitle">Tambah santri baru</h2><p class="muted">Santri harus memiliki jenjang dan kamar agar masuk daftar laundry.</p></div><button id="cancelStudentFormBtn" class="icon-btn" type="button" aria-label="Tutup">×</button></div>
+          <form id="studentForm"><input id="studentId" type="hidden"><div class="form-row two-col"><div class="field"><label for="studentName">Nama lengkap *</label><input id="studentName" required maxlength="150" placeholder="Nama santri sesuai data dayah"></div><div class="field"><label for="studentNis">NIS / nomor induk</label><input id="studentNis" maxlength="50" placeholder="Opsional"></div></div><div class="form-row two-col"><div class="field"><label for="studentLevel">Jenjang *</label><select id="studentLevel" required><option value="">Pilih jenjang</option></select></div><div class="field"><label for="studentRoom">Kamar *</label><select id="studentRoom" required disabled><option value="">Pilih jenjang terlebih dahulu</option></select></div></div><label class="checkbox-line"><input id="studentActive" type="checkbox" checked> Santri aktif dan dapat dicatat laundry</label><div id="studentMessage" class="inline-message hidden" role="status"></div><div class="form-actions"><button type="button" id="cancelStudentFormBtn2" class="btn btn-light">Batal</button><button type="submit" id="saveStudentBtn" class="btn btn-primary">Simpan santri</button></div></form>
+        </article>
+        <article class="panel table-panel"><div class="panel-heading responsive-heading"><div><h2>Daftar santri</h2><p id="studentCountLabel" class="muted">Memuat data santri…</p></div><div class="table-tools"><input id="studentFilter" class="search-input" type="search" placeholder="Cari nama, NIS, kamar…"><select id="studentLevelFilter" aria-label="Filter jenjang"><option value="">Semua jenjang</option></select></div></div><div class="table-wrap"><table><thead><tr><th>Nama santri</th><th>NIS</th><th>Jenjang</th><th>Kamar</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="studentsBody"><tr><td colspan="6" class="empty-cell">Memuat data…</td></tr></tbody></table></div></article>
+      </section>
+
+      <section id="view-tahap" class="view-section hidden">
+        <div class="page-heading"><div><p class="eyebrow">JADWAL</p><h1>Periode & tahap</h1><p class="muted">Setiap periode memiliki slot Tahap 1–8. Buat hanya tahap yang digunakan pada periode tersebut.</p></div></div>
+        <div class="content-grid period-grid"><article class="panel form-panel"><div class="panel-heading"><div><h2>Buat periode baru</h2><p class="muted">Nomor periode dibuat otomatis: Periode 1, 2, 3, dan seterusnya.</p></div></div><form id="periodForm"><div class="period-explainer"><span class="period-number-preview" id="nextPeriodPreview">1</span><div><strong>Periode berikutnya</strong><small>Nomor akan bertambah otomatis dan tidak bergantung pada bulan.</small></div></div><div id="periodMessage" class="inline-message hidden" role="status"></div><button class="btn btn-primary" type="submit">＋ Buat periode</button></form></article>
+          <article class="panel form-panel"><div class="panel-heading"><div><h2>Tambah tahap laundry</h2><p class="muted">Setiap periode dapat memiliki Tahap 1 hingga Tahap 8.</p></div></div><form id="stageForm"><div class="field"><label for="stagePeriod">Periode *</label><select id="stagePeriod" required><option value="">Pilih periode</option></select></div><div class="form-row two-col"><div class="field"><label for="stageNumber">Nomor tahap *</label><select id="stageNumber" required><option value="">Pilih tahap</option><option value="1">Tahap 1</option><option value="2">Tahap 2</option><option value="3">Tahap 3</option><option value="4">Tahap 4</option><option value="5">Tahap 5</option><option value="6">Tahap 6</option><option value="7">Tahap 7</option><option value="8">Tahap 8</option></select></div><div class="field"><label for="stageDate">Tanggal laundry *</label><input id="stageDate" type="date" required></div></div><div id="stageMessage" class="inline-message hidden" role="status"></div><button class="btn btn-primary" type="submit">＋ Tambah tahap</button></form></article></div>
+        <article class="panel table-panel"><div class="panel-heading"><div><h2>Daftar periode dan tahap</h2><p class="muted">Laporan setiap periode selalu menampilkan kolom Tahap 1–8 dan totalnya.</p></div></div><div id="periodsList" class="periods-list"><div class="empty-state">Memuat periode…</div></div></article>
+      </section>
+
+      <section id="view-laporan" class="view-section hidden">
+        <div class="page-heading"><div><p class="eyebrow">REKAPITULASI</p><h1>Laporan laundry</h1><p class="muted">Satu PDF lanskap berisi Tahap 1–8 dan total berat per santri, kamar, serta jenjang.</p></div></div>
+        <div class="report-layout"><article class="panel form-panel"><div class="panel-heading"><div><h2>Buat laporan periode</h2><p class="muted">PDF A4 lanskap dengan kop surat, logo di kiri dan kanan, lalu rekap jenjang → kamar → santri.</p></div><div class="report-icon">▤</div></div><form id="reportForm"><div class="field"><label for="reportPeriod">Pilih periode *</label><select id="reportPeriod" required><option value="">Pilih periode</option></select></div><div class="report-includes"><strong>Isi laporan</strong><div>✓ Kop surat dapat diedit melalui Pengaturan</div><div>✓ Logo Laundry di kiri dan logo Dayah di kanan</div><div>✓ Kolom Tahap 1–8 dan total otomatis</div><div>✓ Rekap jenjang → kamar → santri dalam satu PDF</div></div><div id="reportMessage" class="inline-message hidden" role="status"></div><button class="btn btn-primary btn-wide" type="submit">Buat dan unduh PDF <span>↓</span></button></form></article><aside class="panel helper-panel"><div class="helper-icon">▤</div><h3>Rekap otomatis</h3><p class="muted">Data dikelompokkan berdasarkan jenjang dan kamar yang tersimpan saat laundry dicatat. Perpindahan kamar di masa depan tidak mengubah riwayat lama.</p><div class="notice-box"><strong>Jumlah pakaian</strong><p>Kolom pakaian boleh kosong. Laporan akan menjumlahkan hanya angka yang benar-benar dicatat.</p></div></aside></div>
+      </section>
+
+      <section id="view-pengaturan" class="view-section hidden">
+        <div class="page-heading"><div><p class="eyebrow">KONFIGURASI</p><h1>Pengaturan laporan</h1><p class="muted">Atur kop surat, identitas dayah, dan logo yang muncul pada PDF lanskap.</p></div></div>
+        <article class="panel form-panel settings-panel">
+          <div class="panel-heading"><div><h2>Identitas kop surat</h2><p class="muted">Logo Laundry BUD_RQ tampil di kiri, logo Dayah tampil di kanan.</p></div><span class="pill pill-blue">PDF A4 Lanskap</span></div>
+          <form id="reportSettingsForm">
+            <div class="settings-logo-grid">
+              <div class="settings-logo-card"><div class="settings-logo-preview" id="laundryLogoPreview"><span>Logo Laundry</span></div><div class="field"><label for="laundryLogoFile">Logo Laundry BUD_RQ · kiri</label><input id="laundryLogoFile" type="file" accept="image/png,image/jpeg"><small class="field-help">PNG/JPG, maksimal 1 MB. Logo bisa diganti kapan saja.</small></div><button type="button" id="clearLaundryLogoBtn" class="btn btn-light btn-sm">Hapus logo laundry</button></div>
+              <div class="settings-logo-card"><div class="settings-logo-preview" id="dayahLogoPreview"><img src="./assets/logo-ruhul-qurani.png" alt="Logo Dayah"></div><div class="field"><label for="dayahLogoFile">Logo Dayah · kanan</label><input id="dayahLogoFile" type="file" accept="image/png,image/jpeg"><small class="field-help">Logo Ruhul Qur’ani digunakan sebagai default jika tidak diganti.</small></div><button type="button" id="clearDayahLogoBtn" class="btn btn-light btn-sm">Gunakan logo default</button></div>
+            </div>
+            <section class="director-settings">
+              <div class="director-settings-heading"><div><h3>Profil Direktur di Dashboard</h3><p class="muted">Foto, nama, jabatan, dan pesan akan tampil di bawah foto pada HP maupun laptop.</p></div><span class="director-settings-icon">✦</span></div>
+              <div class="director-settings-grid">
+                <div class="director-upload-column">
+                  <div class="director-settings-photo" id="directorPhotoPreview"><div class="director-photo-placeholder"><span>DRQ</span><small>Unggah foto direktur</small></div></div>
+                  <div class="field"><label for="directorPhotoFile">Foto Direktur</label><input id="directorPhotoFile" type="file" accept="image/png,image/jpeg,image/webp"><small class="field-help">Gunakan foto resmi, JPG/PNG/WebP maksimal 1 MB.</small></div>
+                  <button type="button" id="clearDirectorPhotoBtn" class="btn btn-light btn-sm">Hapus foto</button>
+                </div>
+                <div class="director-fields-column">
+                  <div class="field"><label for="settingDirectorName">Nama Direktur</label><input id="settingDirectorName" maxlength="180" placeholder="Contoh: Tgk. H. ..."></div>
+                  <div class="field"><label for="settingDirectorRole">Jabatan</label><input id="settingDirectorRole" maxlength="180" placeholder="Direktur Badan Usaha Dayah Ruhul Qur’ani"></div>
+                  <div class="field"><label for="settingDirectorQuote">Kata-kata / pesan</label><textarea id="settingDirectorQuote" rows="3" maxlength="500" placeholder="Pesan singkat yang ingin ditampilkan di dashboard"></textarea></div>
+                </div>
+              </div>
+            </section>
+            <div class="form-row two-col"><div class="field"><label for="settingDayahName">Nama dayah *</label><input id="settingDayahName" maxlength="180" required value="Dayah Ruhul Qur'ani"></div><div class="field"><label for="settingReportTitle">Judul laporan *</label><input id="settingReportTitle" maxlength="180" required value="REKAPITULASI LAUNDRY SANTRI"></div></div>
+            <div class="field"><label for="settingAddress">Alamat / keterangan kop surat</label><textarea id="settingAddress" rows="2" maxlength="500" placeholder="Alamat dayah, desa, kecamatan, kabupaten"></textarea></div>
+            <div class="field"><label for="settingContact">Kontak / identitas tambahan</label><input id="settingContact" maxlength="180" placeholder="Telepon, email, atau identitas resmi (opsional)"></div>
+            <div class="settings-report-preview"><div class="settings-preview-logo left" id="previewLaundryLogo"><span>Logo Laundry</span></div><div class="settings-preview-copy"><strong id="previewDayahName">DAYAH RUHUL QUR’ANI</strong><span id="previewAddress">Alamat dayah akan tampil di sini</span><small id="previewContact">Kontak / identitas tambahan</small><b id="previewReportTitle">REKAPITULASI LAUNDRY SANTRI</b></div><div class="settings-preview-logo right" id="previewDayahLogo"><img src="./assets/logo-ruhul-qurani.png" alt="Logo Dayah"></div></div>
+            <p class="field-help">Pratinjau kop surat: logo laundry di kiri, identitas di tengah, dan logo dayah di kanan.</p>
+            <div id="reportSettingsMessage" class="inline-message hidden" role="status"></div><div class="form-actions"><button type="button" id="resetReportSettingsBtn" class="btn btn-light">Pulihkan default</button><button type="submit" id="saveReportSettingsBtn" class="btn btn-primary">Simpan pengaturan laporan</button></div>
+          </form>
+        </article>
+      </section>
+
+      <footer class="app-footer"><span>SILAS · Sistem Informasi Laundry Santri</span><span>Data tersimpan di Supabase</span></footer>
+    </main>
+  </div>
+
+  <!-- Navigasi HP terpisah dari sidebar agar selalu menempel di viewport.
+       Tombol memakai data-view/nav-item yang sama sehingga handler app.js tetap digunakan. -->
+  <nav id="mobileBottomNav" class="mobile-bottom-nav hidden" aria-label="Navigasi utama HP">
+    <button type="button" class="nav-item active" data-view="dashboard" aria-label="Dashboard" title="Dashboard">
+      <span class="nav-icon" aria-hidden="true">▦</span><span class="mobile-nav-label">Dashboard</span>
+    </button>
+    <button type="button" class="nav-item" data-view="santri" aria-label="Data santri" title="Data santri">
+      <span class="nav-icon" aria-hidden="true">♙</span><span class="mobile-nav-label">Santri</span>
+    </button>
+    <button type="button" class="nav-item" data-view="input" aria-label="Input laundry" title="Input laundry">
+      <span class="nav-icon" aria-hidden="true">＋</span><span class="mobile-nav-label">Tambah</span>
+    </button>
+    <button type="button" class="nav-item" data-view="tahap" aria-label="Periode dan tahap" title="Periode & tahap">
+      <span class="nav-icon" aria-hidden="true">▣</span><span class="mobile-nav-label">Tahap</span>
+    </button>
+    <button type="button" class="nav-item" data-view="laporan" aria-label="Laporan" title="Laporan">
+      <span class="nav-icon" aria-hidden="true">▤</span><span class="mobile-nav-label">Laporan</span>
+    </button>
+    <button type="button" class="nav-item" data-view="pengaturan" aria-label="Pengaturan laporan" title="Pengaturan laporan">
+      <span class="nav-icon" aria-hidden="true">⚙</span><span class="mobile-nav-label">Setelan</span>
+    </button>
+  </nav>
+  <div id="dashboardDoorTransition" class="dashboard-door-transition hidden" aria-hidden="true">
+    <div class="dashboard-door-panel dashboard-door-left" aria-hidden="true"></div>
+    <div class="dashboard-door-panel dashboard-door-right" aria-hidden="true"></div>
+    <div class="dashboard-door-brand" aria-hidden="true">
+      <img src="./assets/logo-ruhul-qurani.png" alt="">
+      <strong>SILAS</strong>
+      <span>DAYAH RUHUL QUR’ANI</span>
+      <small lang="ja">誠実 · 奉仕 · 信頼</small>
+    </div>
+    <span class="dashboard-door-seam" aria-hidden="true"></span>
+  </div>
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

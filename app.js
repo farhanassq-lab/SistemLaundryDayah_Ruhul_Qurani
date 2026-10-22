@@ -14,9 +14,9 @@ const $$ = (selector) => [...document.querySelectorAll(selector)];
 const state = {
   supabase: null, user: null, jenjang: [], kamar: [], santri: [], periods: [], stages: [],
   selectedStudent: null, editingStudentId: null, currentView: 'dashboard',
-  issueStudent: null, issueReports: [], issueTableReady: false, issuePhotoObjectUrl: null,
   reportSettings: { id: 1, nama_dayah: "Dayah Ruhul Qur’ani", alamat: '', kontak: '', judul_laporan: 'REKAPITULASI LAUNDRY SANTRI', logo_dayah_data: null, logo_laundry_data: null, nama_direktur: '', jabatan_direktur: 'Direktur Badan Usaha Dayah Ruhul Qur’ani', kata_direktur: 'Kebersihan dan kerapian adalah bagian dari pelayanan. Semoga setiap ikhtiar memudahkan santri dalam menuntut ilmu.', foto_direktur_data: null },
-  defaultDayahLogoData: null
+  defaultDayahLogoData: null,
+  loginTransitionInProgress: false
 };
 const fmt = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 });
 const fmtInt = new Intl.NumberFormat('id-ID');
@@ -247,32 +247,68 @@ function setBusy(button, busy, busyText = 'Memproses…') {
   }
 }
 function setView(view) {
-  const validViews = ['dashboard', 'input', 'santri', 'tahap', 'laporan', 'masalah', 'pengaturan'];
-  if (!validViews.includes(view)) view = 'dashboard';
   state.currentView = view;
   $$('.view-section').forEach(section => section.classList.toggle('hidden', section.id !== `view-${view}`));
-  $$('.nav-item').forEach(item => {
-    item.classList.toggle('active', item.dataset.view === view);
-  });
-  const names = {dashboard:'Dashboard', input:'Input laundry', santri:'Data santri', tahap:'Periode & tahap', laporan:'Laporan', masalah:'Laporan masalah', pengaturan:'Pengaturan laporan'};
+  $$('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === view));
+  const names = {dashboard:'Dashboard', input:'Input laundry', santri:'Data santri', tahap:'Periode & tahap', laporan:'Laporan', pengaturan:'Pengaturan laporan'};
   $('#pageBreadcrumb').textContent = names[view] || 'Dashboard';
-  $('#sidebar')?.classList.remove('open');
+  $('#sidebar').classList.remove('open');
   if (view === 'santri') renderStudents();
   if (view === 'dashboard') renderDashboard();
-  if (view === 'masalah') loadIssueReports();
 }
+function motionDelay(milliseconds) {
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  return new Promise(resolve => window.setTimeout(resolve, reduceMotion ? 70 : milliseconds));
+}
+
 function showAuth() {
-  document.body.classList.remove('app-authenticated');
-  $('#authScreen').classList.remove('hidden');
+  const authScreen = $('#authScreen');
+  authScreen.classList.remove('hidden', 'is-tearing', 'is-door-opening');
   $('#appShell').classList.add('hidden');
   $('#configWarning').classList.add('hidden');
+
+  const doorTransition = $('#dashboardDoorTransition');
+  if (doorTransition) {
+    doorTransition.classList.add('hidden');
+    doorTransition.classList.remove('is-opening');
+    doorTransition.setAttribute('aria-hidden', 'true');
+  }
+
+  if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    void authScreen.offsetWidth;
+    authScreen.classList.add('is-door-opening');
+    window.setTimeout(() => authScreen.classList.remove('is-door-opening'), 2250);
+  }
 }
+
 function showApp() {
-  document.body.classList.add('app-authenticated');
   $('#authScreen').classList.add('hidden');
+  $('#authScreen').classList.remove('is-door-opening', 'is-tearing');
   $('#appShell').classList.remove('hidden');
   $('#userEmail').textContent = state.user?.email || 'Petugas';
   $('#configWarning').classList.add('hidden');
+}
+
+async function openDashboardWithDoors() {
+  const transition = $('#dashboardDoorTransition');
+  if (!transition) {
+    showApp();
+    return;
+  }
+
+  transition.classList.remove('hidden', 'is-opening');
+  transition.setAttribute('aria-hidden', 'false');
+  void transition.offsetWidth;
+
+  // Put the dashboard behind the closed doors, hold briefly, then reveal it slowly.
+  showApp();
+  await motionDelay(260);
+  transition.classList.add('is-opening');
+  await motionDelay(2110);
+
+  transition.classList.add('hidden');
+  transition.classList.remove('is-opening');
+  transition.setAttribute('aria-hidden', 'true');
 }
 
 async function start() {
@@ -291,6 +327,8 @@ async function start() {
   state.supabase.auth.onAuthStateChange((_event, session) => {
     if (session?.user) {
       state.user = session.user;
+      // Saat login manual, biarkan onLogin menjalankan animasi sobekan dan pintu.
+      if (state.loginTransitionInProgress) return;
       showApp();
       // Jalankan query setelah callback auth selesai untuk menghindari auth-lock.
       window.setTimeout(() => refreshAll(), 0);
@@ -351,29 +389,6 @@ function wireEvents() {
     renderDirectorCard();
   });
   $('#reportForm').addEventListener('submit', onGenerateReport);
-  $('#issueForm').addEventListener('submit', onSaveIssueReport);
-  $('#issueStudentSearch').addEventListener('input', onIssueStudentSearch);
-  $('#issueStudentSearch').addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') $('#issueStudentSuggestions').classList.add('hidden');
-  });
-  $('#issueStudentSuggestions').addEventListener('click', onIssueStudentSuggestionClick);
-  $('#issuePhoto').addEventListener('change', onIssuePhotoChange);
-  $('#clearIssuePhotoBtn').addEventListener('click', clearIssuePhoto);
-  $('#issueForm').addEventListener('reset', () => {
-    window.setTimeout(() => {
-      state.issueStudent = null;
-      $('#issueStudentBio').classList.add('hidden');
-      $('#issueStudentSuggestions').classList.add('hidden');
-      $('#issuePhoto').value = '';
-      clearIssuePhotoPreviewOnly();
-      $('#issueDate').value = localDateInputValue();
-      hideMessage('#issueMessage');
-    }, 0);
-  });
-  $('#issueReportsList').addEventListener('click', onIssueReportsAction);
-  $('#issueStatusFilter').addEventListener('change', renderIssueReports);
-  $('#refreshIssueReportsBtn').addEventListener('click', () => loadIssueReports());
-  $('#issueDate').value = localDateInputValue();
   $('#reportSettingsForm').addEventListener('submit', onSaveReportSettings);
   ['#settingDayahName','#settingAddress','#settingContact','#settingReportTitle'].forEach(sel => $(sel).addEventListener('input', updateReportSettingsPreview));
   $('#laundryLogoFile').addEventListener('change', event => onLogoFileChange(event, 'logo_laundry_data'));
@@ -383,22 +398,140 @@ function wireEvents() {
   $('#resetReportSettingsBtn').addEventListener('click', resetReportSettingsForm);
 }
 
+
+async function playLoginPaperTear() {
+  const authScreen = $('#authScreen');
+  const form = $('#loginForm');
+  const panel = form?.parentElement;
+
+  if (!form || !panel) {
+    authScreen?.classList.add('is-tearing');
+    await motionDelay(2250);
+    authScreen?.classList.remove('is-tearing');
+    return;
+  }
+
+  panel.querySelector('.auth-tear-stage')?.remove();
+
+  const formRect = form.getBoundingClientRect();
+  const panelRect = panel.getBoundingClientRect();
+  const stage = document.createElement('div');
+  stage.className = 'auth-tear-stage';
+  stage.setAttribute('aria-hidden', 'true');
+  stage.style.left = `${formRect.left - panelRect.left}px`;
+  stage.style.top = `${formRect.top - panelRect.top}px`;
+  stage.style.width = `${formRect.width}px`;
+  stage.style.height = `${formRect.height}px`;
+
+  const originalInputs = [...form.querySelectorAll('input')];
+
+  function makeTornSheet(position) {
+    const sheet = form.cloneNode(true);
+    sheet.removeAttribute('id');
+    sheet.classList.remove('is-tearing-source');
+    sheet.classList.add('auth-tear-sheet', position);
+    sheet.setAttribute('aria-hidden', 'true');
+
+    sheet.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
+    sheet.querySelectorAll('[for]').forEach(node => node.removeAttribute('for'));
+    sheet.querySelectorAll('input').forEach((input, index) => {
+      input.value = originalInputs[index]?.value ?? '';
+      input.readOnly = true;
+      input.setAttribute('tabindex', '-1');
+      input.setAttribute('autocomplete', 'off');
+    });
+    sheet.querySelectorAll('button').forEach(button => {
+      button.disabled = true;
+      button.type = 'button';
+      button.setAttribute('tabindex', '-1');
+    });
+    sheet.querySelectorAll('a').forEach(link => link.removeAttribute('href'));
+    return sheet;
+  }
+
+  stage.appendChild(makeTornSheet('tear-top'));
+  stage.appendChild(makeTornSheet('tear-bottom'));
+
+  const seam = document.createElement('div');
+  seam.className = 'auth-tear-seam';
+  seam.setAttribute('aria-hidden', 'true');
+  stage.appendChild(seam);
+
+  const fragments = [
+    { left: '13%', x: '-42px', y: '-78px', rotate: '-58deg', delay: '.16s' },
+    { left: '27%', x: '-22px', y: '70px', rotate: '44deg', delay: '.24s' },
+    { left: '41%', x: '-10px', y: '-96px', rotate: '-72deg', delay: '.20s' },
+    { left: '57%', x: '18px', y: '86px', rotate: '62deg', delay: '.28s' },
+    { left: '72%', x: '28px', y: '-76px', rotate: '48deg', delay: '.22s' },
+    { left: '86%', x: '45px', y: '74px', rotate: '-48deg', delay: '.30s' }
+  ];
+
+  fragments.forEach((fragment, index) => {
+    const piece = document.createElement('span');
+    piece.className = `auth-tear-fragment auth-tear-fragment-${index + 1}`;
+    piece.setAttribute('aria-hidden', 'true');
+    piece.style.left = fragment.left;
+    piece.style.setProperty('--tear-x', fragment.x);
+    piece.style.setProperty('--tear-y', fragment.y);
+    piece.style.setProperty('--tear-rotate', fragment.rotate);
+    piece.style.setProperty('--tear-delay', fragment.delay);
+    stage.appendChild(piece);
+  });
+
+  panel.appendChild(stage);
+  form.classList.add('is-tearing-source');
+  authScreen.classList.add('is-tearing');
+  void stage.offsetWidth;
+  stage.classList.add('is-active');
+
+  // Keep the torn card visible long enough for the whole effect to be noticed.
+  await motionDelay(2320);
+
+  stage.remove();
+  form.classList.remove('is-tearing-source');
+  authScreen.classList.remove('is-tearing');
+}
+
 async function onLogin(event) {
   event.preventDefault();
   $('#loginError').textContent = '';
   const button = event.submitter || $('#loginForm button[type="submit"]');
-  setBusy(button, true, 'Sedang masuk…');
   const email = $('#loginEmail').value.trim();
   const password = $('#loginPassword').value;
-  const { data, error } = await state.supabase.auth.signInWithPassword({ email, password });
-  setBusy(button, false);
-  if (error) {
+
+  state.loginTransitionInProgress = true;
+  setBusy(button, true, 'Memeriksa akses…');
+
+  try {
+    const { data, error } = await state.supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      state.loginTransitionInProgress = false;
+      setBusy(button, false);
+      $('#loginError').textContent = friendlyError(error);
+      return;
+    }
+
+    state.user = data.user;
+    // Restore the normal button label before cloning the card for the tear animation.
+    // The source form becomes non-interactive as soon as the tear stage is mounted.
+    setBusy(button, false);
+
+    // Tear the visible login card only after Supabase confirms valid credentials.
+    const authScreen = $('#authScreen');
+    authScreen.classList.remove('is-door-opening');
+    await playLoginPaperTear();
+
+    // Reveal the dashboard with a slower, deliberate door-opening sequence.
+    await openDashboardWithDoors();
+    state.loginTransitionInProgress = false;
+    setBusy(button, false);
+    await refreshAll();
+  } catch (error) {
+    state.loginTransitionInProgress = false;
+    setBusy(button, false);
     $('#loginError').textContent = friendlyError(error);
-    return;
   }
-  state.user = data.user;
-  showApp();
-  await refreshAll();
 }
 
 async function refreshAll() {
@@ -420,7 +553,6 @@ async function refreshAll() {
     state.periods = periodsRes.data || [];
     state.stages = stagesRes.data || [];
     populateAllSelects();
-    populateIssueStageOptions();
     renderStudents();
     renderPeriods();
     renderDashboard();
@@ -847,425 +979,6 @@ async function onPeriodListAction(event) {
     showToast(`Tahap belum berhasil dihapus: ${friendlyError(error)}`, 'error', 'Gagal menghapus tahap');
   } finally {
     setBusy(button, false);
-  }
-}
-
-
-const ISSUE_BUCKET = 'silas-laporan-masalah';
-const ISSUE_TYPE_LABELS = {
-  hilang: 'Pakaian hilang',
-  rusak: 'Pakaian rusak',
-  tidak_bersih: 'Pakaian tidak bersih / masih bernoda',
-  tertukar: 'Pakaian tertukar',
-  jumlah_kurang: 'Jumlah pakaian kurang',
-  basah: 'Pakaian masih basah',
-  bau: 'Pakaian berbau tidak sedap',
-  lainnya: 'Masalah lainnya'
-};
-const ISSUE_STATUS_LABELS = {
-  baru: 'Baru dilaporkan',
-  diperiksa: 'Sedang diperiksa',
-  selesai: 'Selesai'
-};
-
-function localDateInputValue() {
-  const now = new Date();
-  const pad = value => String(value).padStart(2, '0');
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
-
-function populateIssueStageOptions() {
-  const select = $('#issueStage');
-  if (!select) return;
-  const oldValue = select.value;
-  const options = state.stages
-    .slice()
-    .sort((a, b) => {
-      const pa = state.periods.find(p => p.id === a.periode_id);
-      const pb = state.periods.find(p => p.id === b.periode_id);
-      return (Number(pb?.nomor_periode || 0) - Number(pa?.nomor_periode || 0)) ||
-        (Number(a.nomor_tahap || 0) - Number(b.nomor_tahap || 0));
-    })
-    .map(stage => {
-      const period = state.periods.find(p => p.id === stage.periode_id);
-      return `<option value="${escapeHtml(stage.id)}">${escapeHtml(periodLabel(period))} · Tahap ${Number(stage.nomor_tahap)} · ${escapeHtml(shortDate(stage.tanggal_laundry))}</option>`;
-    }).join('');
-  select.innerHTML = `<option value="">Tidak diketahui / tidak terkait tahap</option>${options}`;
-  if (oldValue && state.stages.some(stage => stage.id === oldValue)) select.value = oldValue;
-}
-
-function onIssueStudentSearch() {
-  const query = $('#issueStudentSearch').value.trim().toLocaleLowerCase('id-ID');
-  state.issueStudent = null;
-  $('#issueStudentBio').classList.add('hidden');
-  const container = $('#issueStudentSuggestions');
-  if (query.length < 2) {
-    container.classList.add('hidden');
-    container.innerHTML = '';
-    return;
-  }
-  const results = state.santri.filter(student => student.status_aktif && student.kamar && (
-    String(student.nama || '').toLocaleLowerCase('id-ID').includes(query) ||
-    String(student.nis || '').toLocaleLowerCase('id-ID').includes(query)
-  )).slice(0, 10);
-  if (!results.length) {
-    container.innerHTML = '<div class="empty-state">Santri tidak ditemukan. Periksa ejaan atau data santri di SILAS.</div>';
-    container.classList.remove('hidden');
-    return;
-  }
-  container.innerHTML = results.map(student => `
-    <button type="button" class="suggestion-item" data-issue-student-id="${escapeHtml(student.id)}">
-      <span class="suggestion-avatar">${escapeHtml(initials(student.nama))}</span>
-      <span><strong>${escapeHtml(student.nama)}</strong><small>${escapeHtml(student.kamar?.jenjang?.nama || 'Jenjang belum ada')} · Kamar ${escapeHtml(student.kamar?.nama || '-')} ${student.nis ? `· NIS ${escapeHtml(student.nis)}` : ''}</small></span>
-      <span aria-hidden="true">›</span>
-    </button>`).join('');
-  container.classList.remove('hidden');
-}
-
-function onIssueStudentSuggestionClick(event) {
-  const button = event.target.closest('[data-issue-student-id]');
-  if (!button) return;
-  const student = state.santri.find(item => String(item.id) === String(button.dataset.issueStudentId) && item.status_aktif && item.kamar);
-  if (!student) return;
-  state.issueStudent = student;
-  $('#issueStudentSearch').value = student.nama;
-  $('#issueStudentSuggestions').classList.add('hidden');
-  $('#issueStudentBio').innerHTML = `
-    <div class="bio-top"><div class="bio-avatar">${escapeHtml(initials(student.nama))}</div>
-      <div><strong>${escapeHtml(student.nama)}</strong><small>${student.nis ? `NIS ${escapeHtml(student.nis)}` : 'NIS belum diisi'} · Santri aktif</small></div></div>
-    <div class="bio-grid"><div class="bio-item"><small>Jenjang</small><strong>${escapeHtml(student.kamar?.jenjang?.nama || '-')}</strong></div>
-    <div class="bio-item"><small>Kamar</small><strong>${escapeHtml(student.kamar?.nama || '-')}</strong></div></div>`;
-  $('#issueStudentBio').classList.remove('hidden');
-}
-
-function clearIssuePhotoPreviewOnly() {
-  if (state.issuePhotoObjectUrl) {
-    URL.revokeObjectURL(state.issuePhotoObjectUrl);
-    state.issuePhotoObjectUrl = null;
-  }
-  $('#issuePhotoPreviewImage').removeAttribute('src');
-  $('#issuePhotoName').textContent = 'Foto bukti';
-  $('#issuePhotoPreview').classList.add('hidden');
-}
-
-function clearIssuePhoto() {
-  $('#issuePhoto').value = '';
-  clearIssuePhotoPreviewOnly();
-}
-
-function onIssuePhotoChange(event) {
-  const file = event.target.files?.[0];
-  if (!file) {
-    clearIssuePhotoPreviewOnly();
-    return;
-  }
-  const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-  if (!allowed.includes(file.type)) {
-    clearIssuePhoto();
-    showMessage('#issueMessage', 'Format foto harus JPG, PNG, atau WebP.', 'error');
-    return;
-  }
-  if (file.size > 5 * 1024 * 1024) {
-    clearIssuePhoto();
-    showMessage('#issueMessage', 'Ukuran foto maksimal 5 MB.', 'error');
-    return;
-  }
-  if (state.issuePhotoObjectUrl) URL.revokeObjectURL(state.issuePhotoObjectUrl);
-  state.issuePhotoObjectUrl = URL.createObjectURL(file);
-  $('#issuePhotoPreviewImage').src = state.issuePhotoObjectUrl;
-  $('#issuePhotoName').textContent = file.name;
-  $('#issuePhotoPreview').classList.remove('hidden');
-  hideMessage('#issueMessage');
-}
-
-async function onSaveIssueReport(event) {
-  event.preventDefault();
-  hideMessage('#issueMessage');
-
-  if (!state.supabase || !state.user) {
-    return showMessage('#issueMessage', 'Silakan login terlebih dahulu.', 'error');
-  }
-  if (!state.issueStudent) {
-    return showMessage('#issueMessage', 'Pilih nama santri dari daftar saran agar jenjang dan kamar terisi otomatis.', 'error');
-  }
-
-  const type = $('#issueType').value;
-  const itemName = $('#issueItemName').value.trim();
-  const quantity = Number($('#issueQuantity').value);
-  const date = $('#issueDate').value;
-  const stageId = $('#issueStage').value || null;
-  const description = $('#issueDescription').value.trim();
-  const photo = $('#issuePhoto').files?.[0] || null;
-
-  if (!ISSUE_TYPE_LABELS[type]) return showMessage('#issueMessage', 'Pilih jenis masalah yang valid.', 'error');
-  if (!itemName) return showMessage('#issueMessage', 'Nama atau jenis pakaian wajib diisi.', 'error');
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) return showMessage('#issueMessage', 'Jumlah pakaian harus angka bulat dari 1 sampai 100.', 'error');
-  if (!date || !parseLocalDate(date)) return showMessage('#issueMessage', 'Tanggal ditemukan wajib diisi dengan benar.', 'error');
-  if (!description) return showMessage('#issueMessage', 'Keterangan masalah wajib diisi.', 'error');
-  if (photo && (!['image/jpeg', 'image/png', 'image/webp'].includes(photo.type) || photo.size > 5 * 1024 * 1024)) {
-    return showMessage('#issueMessage', 'Foto harus JPG, PNG, atau WebP dengan ukuran maksimal 5 MB.', 'error');
-  }
-
-  const student = state.issueStudent;
-  const saveButton = $('#saveIssueBtn');
-  let uploadedPath = null;
-  setBusy(saveButton, true, 'Menyimpan laporan…');
-  try {
-    if (photo) {
-      const extension = (photo.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
-      const randomPart = (window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`);
-      uploadedPath = `${state.user.id}/${Date.now()}-${randomPart}.${extension}`;
-      const { error: uploadError } = await state.supabase.storage.from(ISSUE_BUCKET).upload(uploadedPath, photo, {
-        cacheControl: '3600',
-        upsert: false,
-        contentType: photo.type
-      });
-      if (uploadError) throw uploadError;
-    }
-
-    const payload = {
-      santri_id: student.id,
-      santri_nama_snapshot: student.nama,
-      jenjang_nama_snapshot: student.kamar?.jenjang?.nama || '-',
-      kamar_nama_snapshot: student.kamar?.nama || '-',
-      jenis_masalah: type,
-      nama_pakaian: itemName,
-      jumlah_pakaian: quantity,
-      deskripsi: description,
-      tanggal_ditemukan: date,
-      tahap_id: stageId,
-      status: 'baru',
-      foto_path: uploadedPath,
-      created_by: state.user.id
-    };
-    const { data, error } = await state.supabase.from('laporan_masalah_laundry').insert(payload).select('*').single();
-    if (error) throw error;
-
-    showMessage('#issueMessage', `Laporan ${ISSUE_TYPE_LABELS[type].toLowerCase()} berhasil disimpan.`, 'success');
-    showToast('Laporan masalah berhasil disimpan.', 'success', 'Laporan tersimpan');
-    $('#issueForm').reset();
-    state.issueStudent = null;
-    $('#issueStudentBio').classList.add('hidden');
-    $('#issueDate').value = localDateInputValue();
-    await loadIssueReports({ silent: true });
-  } catch (error) {
-    console.error('Simpan laporan masalah gagal:', error);
-    if (uploadedPath) {
-      const { error: removeError } = await state.supabase.storage.from(ISSUE_BUCKET).remove([uploadedPath]);
-      if (removeError) console.warn('Foto sementara gagal dibersihkan:', removeError);
-    }
-    const message = /relation .* does not exist|could not find the table|schema cache/i.test(error?.message || '')
-      ? 'Tabel laporan masalah belum tersedia. Jalankan file SQL migration SILAS_Laporan_Masalah.sql di Supabase SQL Editor terlebih dahulu.'
-      : /bucket not found|not found/i.test(error?.message || '')
-        ? 'Bucket foto belum tersedia. Jalankan file SQL migration SILAS_Laporan_Masalah.sql di Supabase SQL Editor.'
-        : friendlyError(error);
-    showMessage('#issueMessage', message, 'error');
-  } finally {
-    setBusy(saveButton, false);
-  }
-}
-
-async function loadIssueReports({ silent = false } = {}) {
-  if (!state.supabase || !state.user) return;
-  const container = $('#issueReportsList');
-  if (!container) return;
-  container.innerHTML = '<div class="empty-state">Memuat laporan masalah…</div>';
-  const { data, error } = await state.supabase
-    .from('laporan_masalah_laundry')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(100);
-  if (error) {
-    state.issueTableReady = false;
-    const missing = /relation .* does not exist|could not find the table|schema cache/i.test(error.message || '');
-    container.innerHTML = `<div class="empty-state issue-load-error"><strong>${missing ? 'Modul database belum diaktifkan.' : 'Laporan belum dapat dimuat.'}</strong><p>${missing ? 'Jalankan file SQL migration SILAS_Laporan_Masalah.sql di Supabase → SQL Editor, lalu muat ulang halaman ini.' : escapeHtml(friendlyError(error))}</p></div>`;
-    if (!silent) showToast(missing ? 'Jalankan SQL migration modul Laporan Masalah terlebih dahulu.' : friendlyError(error), 'error');
-    return;
-  }
-  state.issueTableReady = true;
-  state.issueReports = data || [];
-  await renderIssueReports();
-}
-
-async function renderIssueReports() {
-  const container = $('#issueReportsList');
-  if (!container) return;
-  const filter = $('#issueStatusFilter')?.value || '';
-  const rows = state.issueReports.filter(item => !filter || item.status === filter);
-  if (!rows.length) {
-    container.innerHTML = `<div class="empty-state">${state.issueTableReady ? 'Belum ada laporan pada filter ini.' : 'Buka halaman ini untuk memuat laporan masalah.'}</div>`;
-    return;
-  }
-
-  const cards = await Promise.all(rows.map(async issue => {
-    let photoUrl = '';
-    if (issue.foto_path && state.supabase) {
-      const { data } = await state.supabase.storage.from(ISSUE_BUCKET).createSignedUrl(issue.foto_path, 60 * 60);
-      photoUrl = data?.signedUrl || '';
-    }
-    const stage = state.stages.find(item => item.id === issue.tahap_id);
-    const period = stage ? state.periods.find(item => item.id === stage.periode_id) : null;
-    const stageLabel = stage ? `${periodLabel(period)} · Tahap ${Number(stage.nomor_tahap)}` : 'Tahap tidak dicantumkan';
-    const statusClass = issue.status === 'selesai' ? 'resolved' : issue.status === 'diperiksa' ? 'checking' : 'new';
-    const statusOptions = Object.entries(ISSUE_STATUS_LABELS).map(([value, label]) => `<option value="${value}" ${issue.status === value ? 'selected' : ''}>${label}</option>`).join('');
-    return `
-      <article class="issue-report-card" data-issue-card="${escapeHtml(issue.id)}">
-        <div class="issue-report-topline">
-          <span class="issue-type-badge">${escapeHtml(ISSUE_TYPE_LABELS[issue.jenis_masalah] || 'Masalah laundry')}</span>
-          <span class="issue-status-badge ${statusClass}">${escapeHtml(ISSUE_STATUS_LABELS[issue.status] || issue.status || 'Baru dilaporkan')}</span>
-        </div>
-        <div class="issue-report-main">
-          <div class="issue-report-avatar">${escapeHtml(initials(issue.santri_nama_snapshot))}</div>
-          <div class="issue-report-identity"><strong>${escapeHtml(issue.santri_nama_snapshot)}</strong><small>${escapeHtml(issue.jenjang_nama_snapshot || '-')} · Kamar ${escapeHtml(issue.kamar_nama_snapshot || '-')}</small></div>
-          <div class="issue-report-date">${escapeHtml(dateLabel(issue.tanggal_ditemukan))}</div>
-        </div>
-        <div class="issue-report-details">
-          <div><small>Pakaian</small><strong>${escapeHtml(issue.nama_pakaian)}</strong></div>
-          <div><small>Jumlah</small><strong>${fmtInt.format(Number(issue.jumlah_pakaian || 0))} potong</strong></div>
-          <div class="wide"><small>Tahap</small><strong>${escapeHtml(stageLabel)}</strong></div>
-          <div class="wide"><small>Keterangan</small><p>${escapeHtml(issue.deskripsi)}</p></div>
-        </div>
-        ${photoUrl ? `<a class="issue-photo-link" href="${escapeHtml(photoUrl)}" target="_blank" rel="noopener noreferrer"><img class="issue-photo-thumb" src="${escapeHtml(photoUrl)}" alt="Foto bukti laporan"><span>↗ Lihat foto bukti</span></a>` : '<div class="issue-no-photo">Foto bukti tidak dilampirkan</div>'}
-        <div class="issue-report-actions">
-          <label class="issue-status-control"><span>Status tindak lanjut</span><select class="issue-status-select" aria-label="Status tindak lanjut">${statusOptions}</select></label>
-          <button class="btn btn-light btn-sm" type="button" data-issue-action="status" data-issue-id="${escapeHtml(issue.id)}">Simpan status</button>
-          <button class="btn btn-whatsapp btn-sm" type="button" data-issue-action="whatsapp" data-issue-id="${escapeHtml(issue.id)}">☏ WhatsApp</button>
-        </div>
-      </article>`;
-  }));
-  container.innerHTML = cards.join('');
-}
-
-function buildIssueWhatsAppMessage(issue) {
-  const typeLabel = ISSUE_TYPE_LABELS[issue.jenis_masalah] || 'Masalah laundry';
-  const stage = state.stages.find(item => item.id === issue.tahap_id);
-  const period = stage ? state.periods.find(item => item.id === stage.periode_id) : null;
-  const stageLabel = stage
-    ? `${periodLabel(period)} · Tahap ${Number(stage.nomor_tahap)} · ${dateLabel(stage.tanggal_laundry)}`
-    : 'Belum ditentukan';
-
-  const followUpByType = {
-    hilang: 'Boleh bantu cek apakah pakaian ini tertinggal atau tercampur dengan cucian lain, ya?',
-    rusak: 'Mohon bantuannya untuk mengecek kondisi pakaian ini dan memberi kabar tindak lanjutnya, ya.',
-    tidak_bersih: 'Mohon bantuannya untuk mengecek dan, jika memungkinkan, mencuci ulang pakaian ini, ya.',
-    tertukar: 'Boleh bantu cek kembali dan mencocokkan pakaian ini dengan pemiliknya, ya?',
-    jumlah_kurang: 'Mohon bantuannya untuk mengecek kembali jumlah pakaian pada proses ini, ya.',
-    basah: 'Mohon bantuannya untuk memeriksa dan memastikan pakaian dikeringkan dengan baik, ya.',
-    bau: 'Mohon bantuannya untuk mengecek penyebab bau dan menindaklanjuti bila perlu, ya.',
-    lainnya: 'Mohon bantuannya untuk mengecek dan menindaklanjuti masalah ini, ya.'
-  };
-
-  const lines = [
-    '🧺 *LAPORAN MASALAH LAUNDRY*',
-    '',
-    'Assalamu’alaikum, teman-teman. Izin info ada temuan laundry, ya.',
-    '',
-    '👤 *DATA SANTRI*',
-    `• Nama: ${issue.santri_nama_snapshot || '-'}`,
-    `• Jenjang: ${issue.jenjang_nama_snapshot || '-'}`,
-    `• Kamar: ${issue.kamar_nama_snapshot || '-'}`,
-    '',
-    '👕 *DETAIL PAKAIAN*',
-    `• Masalah: ${typeLabel}`,
-    `• Pakaian: ${issue.nama_pakaian || '-'}`,
-    `• Jumlah: ${Number(issue.jumlah_pakaian || 0)} potong`,
-    `• Tanggal ditemukan: ${dateLabel(issue.tanggal_ditemukan)}`,
-    `• Periode/tahap: ${stageLabel}`,
-    '',
-    '📝 *KETERANGAN*',
-    issue.deskripsi || 'Tidak ada keterangan tambahan.'
-  ];
-
-  if (issue.foto_path) {
-    lines.push(
-      '',
-      '📷 *Foto bukti:* Tersedia di laporan SILAS. Kalau belum ikut terkirim, mohon lampirkan foto saat mengirim pesan ini.'
-    );
-  } else {
-    lines.push('', '📷 *Foto bukti:* Belum dilampirkan.');
-  }
-
-  lines.push(
-    '',
-    '🙏 *Mohon bantuan:*',
-    followUpByType[issue.jenis_masalah] || followUpByType.lainnya,
-    '',
-    'Kalau sudah dicek, boleh kabari di grup ini ya supaya tindak lanjutnya bisa dicatat.',
-    '',
-    'Terima kasih banyak, teman-teman.',
-    'Wassalamu’alaikum warahmatullahi wabarakatuh.'
-  );
-
-  return lines.join('\n');
-}
-async function shareIssueReportToWhatsApp(issueId, button) {
-  const issue = state.issueReports.find(item => String(item.id) === String(issueId));
-  if (!issue) return showToast('Laporan tidak ditemukan. Muat ulang daftar dan coba lagi.', 'error');
-  const message = buildIssueWhatsAppMessage(issue);
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-
-  if (!issue.foto_path) {
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-    return;
-  }
-
-  // Buka jendela cadangan secara sinkron agar browser tidak memblokirnya jika file sharing tidak tersedia.
-  const fallbackWindow = window.open('about:blank', '_blank');
-  setBusy(button, true, 'Menyiapkan foto…');
-  try {
-    const { data, error } = await state.supabase.storage.from(ISSUE_BUCKET).download(issue.foto_path);
-    if (error) throw error;
-    const fileType = data?.type || 'image/jpeg';
-    const file = new File([data], `SILAS-bukti-${issue.id}.${fileType.includes('png') ? 'png' : fileType.includes('webp') ? 'webp' : 'jpg'}`, { type: fileType });
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      if (fallbackWindow && !fallbackWindow.closed) fallbackWindow.close();
-      await navigator.share({ files: [file], text: message, title: 'Laporan Masalah Laundry SILAS' });
-      showToast('Pilih WhatsApp lalu pilih grup laundry untuk mengirim pesan dan foto.', 'info', 'Siap dibagikan');
-      return;
-    }
-
-    try { await navigator.clipboard.writeText(message); } catch (clipboardError) { console.warn('Clipboard tidak tersedia:', clipboardError); }
-    if (fallbackWindow && !fallbackWindow.closed) fallbackWindow.location.href = whatsappUrl;
-    else window.location.href = whatsappUrl;
-    showToast('Pesan dibuka di WhatsApp. Lampirkan foto yang sudah diunduh secara manual jika diperlukan.', 'info', 'Pesan disiapkan');
-  } catch (error) {
-    console.error('Berbagi foto gagal:', error);
-    try { await navigator.clipboard.writeText(message); } catch (clipboardError) { console.warn(clipboardError); }
-    if (fallbackWindow && !fallbackWindow.closed) fallbackWindow.location.href = whatsappUrl;
-    else window.location.href = whatsappUrl;
-    showToast('Pesan WhatsApp disiapkan. Jika foto tidak ikut, lampirkan foto dari galeri secara manual.', 'info', 'Mode cadangan');
-  } finally {
-    setBusy(button, false);
-  }
-}
-
-async function onIssueReportsAction(event) {
-  const button = event.target.closest('[data-issue-action]');
-  if (!button) return;
-  const issueId = button.dataset.issueId;
-  const issue = state.issueReports.find(item => String(item.id) === String(issueId));
-  if (!issue) return;
-  if (button.dataset.issueAction === 'whatsapp') {
-    await shareIssueReportToWhatsApp(issueId, button);
-    return;
-  }
-  if (button.dataset.issueAction === 'status') {
-    const card = button.closest('.issue-report-card');
-    const status = card?.querySelector('.issue-status-select')?.value;
-    if (!ISSUE_STATUS_LABELS[status]) return showToast('Pilih status yang valid.', 'error');
-    setBusy(button, true, 'Menyimpan…');
-    const now = new Date().toISOString();
-    const payload = {
-      status,
-      updated_at: now,
-      resolved_at: status === 'selesai' ? now : null,
-      resolved_by: status === 'selesai' ? state.user?.id || null : null
-    };
-    const { error } = await state.supabase.from('laporan_masalah_laundry').update(payload).eq('id', issueId);
-    setBusy(button, false);
-    if (error) return showToast(`Status belum berhasil disimpan: ${friendlyError(error)}`, 'error');
-    showToast(`Status laporan diperbarui: ${ISSUE_STATUS_LABELS[status]}.`, 'success');
-    await loadIssueReports({ silent: true });
   }
 }
 

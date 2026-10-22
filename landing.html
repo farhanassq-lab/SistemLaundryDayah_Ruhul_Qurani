@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#102b55">
+  <meta name="description" content="SILAS — Sistem Informasi Laundry Santri Dayah Ruhul Qur’ani. Pengelolaan laundry yang lebih tertata, mudah dipantau, dan informatif.">
+  <title>SILAS — Sistem Informasi Laundry Santri</title>
+  <link rel="preload" as="image" href="./assets/landing/hero-masjid.jpg" fetchpriority="high">
+  <link rel="stylesheet" href="./landing.css">
+</head>
+<body>
+  <div class="intro-screen" id="introScreen" aria-label="Pembuka SILAS">
+    <div class="intro-japanese-pattern" aria-hidden="true"></div>
+    <div class="intro-sun" aria-hidden="true"></div>
+    <div class="intro-orbit intro-orbit-one" aria-hidden="true"></div>
+    <div class="intro-orbit intro-orbit-two" aria-hidden="true"></div>
+    <div class="intro-emblem">
+      <span class="intro-emblem-ring" aria-hidden="true"></span>
+      <img src="./assets/landing/logo-ruhul-qurani.png" alt="Logo Dayah Ruhul Qur’ani">
+      <span class="intro-emblem-glint" aria-hidden="true"></span>
+    </div>
+    <span class="intro-kicker">DAYAH RUHUL QUR’ANI</span>
+    <h2 class="intro-title">Pelayanan Lebih Tertata</h2>
+    <p class="intro-subtitle">SILAS · Sistem Informasi Laundry Santri</p>
+    <span class="intro-japanese" lang="ja">誠実 · 丁寧 · 責任</span>
+    <div class="intro-loader" aria-hidden="true"><span></span></div>
+    <button class="intro-skip" id="skipIntro" type="button">Lewati pembuka <span aria-hidden="true">↗</span></button>
+  </div>
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+  <header class="site-header" id="siteHeader">
+    <div class="header-inner">
+      <a class="brand-lockup" href="#beranda" aria-label="SILAS — Beranda">
+        <span class="brand-rq-wrap"><img class="brand-rq" src="./assets/landing/logo-ruhul-qurani.png" alt="Logo Dayah Ruhul Qur’ani"></span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-bud-wrap"><img class="brand-bud" src="./assets/landing/logo-bud-rq.jpg" alt="Logo Badan Usaha Dayah Ruhul Qur’ani"></span>
+      </a>
+
+      <nav class="nav-menu" id="navMenu" aria-label="Navigasi utama">
+        <a class="nav-link active" href="#beranda">Beranda</a>
+        <a class="nav-link" href="#fitur">Fitur</a>
+        <a class="nav-link" href="#pratinjau">Pratinjau</a>
+        <a class="nav-link" href="#semangat">Nilai Dayah</a>
+        <a class="nav-link" href="#pengembangan">Pengembangan</a>
+        <a class="nav-link" href="#tentang">Tentang</a>
+        <a class="nav-mobile-cta" href="./sistem.html">Masuk ke SILAS <span aria-hidden="true">↗</span></a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="button button-navy header-cta" href="./sistem.html"><span class="button-icon" aria-hidden="true">↗</span><span class="header-cta-label">Masuk Sistem</span></a>
+        <button class="menu-toggle" id="menuToggle" type="button" aria-label="Buka menu" aria-controls="navMenu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="beranda" aria-labelledby="heroTitle">
+      <div class="hero-shade" aria-hidden="true"></div>
+      <div class="hero-particles" id="heroParticles" aria-hidden="true"></div>
+      <div class="hero-pattern hero-pattern-left" aria-hidden="true"></div>
+      <div class="hero-pattern hero-pattern-right" aria-hidden="true"></div>
+      <div class="hero-torii-outline" aria-hidden="true"><span></span></div>
+      <div class="hero-japanese-seal" aria-hidden="true"><span lang="ja">誠</span><small>SEISHIN</small></div>
+      <div class="hero-seigaiha" aria-hidden="true"></div>
+      <div class="hero-inner page-width">
+        <div class="hero-copy">
+          <div class="eyebrow eyebrow-light"><span class="eyebrow-mark"></span> SISTEM INFORMASI · DAYAH RUHUL QUR’ANI</div>
+          <div class="hero-wordmark" aria-label="SILAS">SILAS<span>.</span></div>
+          <h1 id="heroTitle">Sistem Informasi<br><em>Laundry Santri</em></h1>
+          <p class="hero-description">SILAS menyatukan pencatatan data santri, input laundry, pengelolaan Tahap 1–8, dan pelaporan dalam alur kerja yang lebih jelas serta mudah ditelusuri.</p>
+          <div class="hero-actions">
+            <a class="button button-gold" href="#fitur"><span aria-hidden="true">▦</span> Jelajahi Fitur <span class="button-arrow" aria-hidden="true">↘</span></a>
+            <a class="button button-glass" href="./sistem.html"><span aria-hidden="true">↗</span> Masuk Sistem</a>
+          </div>
+          <div class="hero-assurances" aria-label="Keunggulan SILAS">
+            <span><i aria-hidden="true">✓</i> Alur tertata</span>
+            <span><i aria-hidden="true">✓</i> Tahap 1–8</span>
+            <span><i aria-hidden="true">✓</i> Laporan rapi</span>
+          </div>
+        </div>
+        <aside class="hero-panel reveal" aria-label="Ringkasan SILAS">
+          <div class="hero-panel-heading">
+            <div>
+              <span class="hero-panel-kicker">DAYAH RUHUL QUR’ANI</span>
+              <span class="hero-panel-overline">SISTEM LAUNDRY SANTRI</span>
+            </div>
+            <span class="hero-panel-seal" lang="ja" aria-label="Makoto, ketulusan">誠</span>
+          </div>
+
+          <h2>Pelayanan Lebih Tertata,<br><em>Amanah Lebih Terjaga.</em></h2>
+          <p class="hero-panel-description">Satu alur untuk pencatatan santri, tahap laundry, dan laporan yang lebih mudah ditinjau.</p>
+
+          <div class="hero-panel-divider" aria-hidden="true"><span></span></div>
+
+          <div class="hero-panel-points">
+            <div class="hero-panel-point">
+              <span class="hero-point-number">01</span>
+              <span><strong>Data santri</strong><small>Jenjang dan kamar lebih teratur</small></span>
+            </div>
+            <div class="hero-panel-point">
+              <span class="hero-point-number">02</span>
+              <span><strong>Tahap 1–8</strong><small>Alur laundry lebih mudah diikuti</small></span>
+            </div>
+            <div class="hero-panel-point">
+              <span class="hero-point-number">03</span>
+              <span><strong>Laporan</strong><small>Rekap PDF dan Excel</small></span>
+            </div>
+          </div>
+
+          <div class="hero-panel-footer">
+            <span lang="ja">整える · 支える · 守る</span>
+            <span>TERTATA · AMANAH · TERJAGA</span>
+          </div>
+        </aside>
+        <a class="scroll-cue" href="#fitur" aria-label="Gulir ke fitur"><span></span> GULIR UNTUK MENJELAJAHI</a>
+      </div>
+      <div class="hero-bottom-accent" aria-hidden="true"></div>
+    </section>
+
+    <section class="section features-section" id="fitur" aria-labelledby="featuresTitle">
+      <div class="section-ornament ornament-left" aria-hidden="true"></div>
+      <div class="asanoha-watermark asanoha-watermark-features" aria-hidden="true"></div>
+      <div class="japanese-side-label" lang="ja" aria-hidden="true">整える · 支える · つなぐ</div>
+      <div class="page-width">
+        <div class="section-heading reveal">
+          <span class="eyebrow"><span class="eyebrow-mark"></span> FITUR UTAMA <span class="eyebrow-mark"></span></span>
+          <h2 id="featuresTitle">Satu sistem untuk pekerjaan<br class="desktop-break"> yang lebih teratur.</h2>
+          <p>Fitur SILAS dirancang untuk membantu aktivitas laundry santri dari pencatatan harian sampai pelaporan.</p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card feature-blue reveal" style="--reveal-delay:0ms">
+            <div class="feature-card-top"><span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 3v3m8-3v3M4 8h16"/><circle cx="12" cy="14" r="4"/><path d="M14.8 11.2 11 15l-1.8-1.8"/></svg></span><span class="feature-number">01</span></div>
+            <h3>Input Laundry</h3><p>Catat berat dan jumlah pakaian dengan alur input yang jelas.</p>
+            <button class="feature-detail" type="button" data-feature="input">Lihat detail <span aria-hidden="true">↗</span></button>
+          </article>
+          <article class="feature-card feature-gold reveal" style="--reveal-delay:70ms">
+            <div class="feature-card-top"><span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.8 20v-1.5a6.2 6.2 0 0 1 12.4 0V20z"/><path d="M16 5a3.5 3.5 0 0 1 0 6.8m1.5 2.1a5.4 5.4 0 0 1 3.7 5.1V20h-4"/></svg></span><span class="feature-number">02</span></div>
+            <h3>Data Santri</h3><p>Kelola biodata, jenjang, dan kamar secara lebih rapi.</p>
+            <button class="feature-detail" type="button" data-feature="santri">Lihat detail <span aria-hidden="true">↗</span></button>
+          </article>
+          <article class="feature-card feature-indigo reveal" style="--reveal-delay:140ms">
+            <div class="feature-card-top"><span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18M7 14h3m4 0h3m-10 3h3"/></svg></span><span class="feature-number">03</span></div>
+            <h3>Periode &amp; Tahap</h3><p>Atur periode berurutan dan pantau Tahap 1 sampai 8.</p>
+            <button class="feature-detail" type="button" data-feature="periode">Lihat detail <span aria-hidden="true">↗</span></button>
+          </article>
+          <article class="feature-card feature-green reveal" style="--reveal-delay:210ms">
+            <div class="feature-card-top"><span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h7m-7 3h7"/><path d="m9 9 .8.8L12 7.5"/></svg></span><span class="feature-number">04</span></div>
+            <h3>Laporan PDF / Excel</h3><p>Susun laporan dengan struktur data yang mudah ditinjau.</p>
+            <button class="feature-detail" type="button" data-feature="laporan">Lihat detail <span aria-hidden="true">↗</span></button>
+          </article>
+          <article class="feature-card feature-red reveal" style="--reveal-delay:280ms">
+            <div class="feature-card-top"><span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 22 20H2z"/><path d="M12 9v5m0 3h.01"/></svg></span><span class="feature-number">05</span></div>
+            <h3>Laporan Masalah</h3><p>Dokumentasikan pakaian hilang, rusak, tertukar, atau kurang bersih.</p>
+            <button class="feature-detail" type="button" data-feature="masalah">Lihat detail <span aria-hidden="true">↗</span></button>
+          </article>
+        </div>
+        <div class="section-note reveal"><span class="note-symbol" aria-hidden="true">✦</span><p>Setiap fitur diarahkan untuk membuat pekerjaan harian lebih mudah ditelusuri dan laporan lebih mudah dibaca.</p></div>
+      </div>
+    </section>
+
+    <section class="section preview-section" id="pratinjau" aria-labelledby="previewTitle">
+      <div class="page-width preview-layout">
+        <div class="preview-copy reveal">
+          <span class="eyebrow eyebrow-light"><span class="eyebrow-mark"></span> PRATINJAU SISTEM</span>
+          <h2 id="previewTitle">Semua lebih jelas<br><em>dalam satu tampilan.</em></h2>
+          <p>Dashboard dirancang agar informasi penting mudah ditemukan, baik saat dibuka lewat laptop maupun layar HP.</p>
+          <ul class="check-list">
+            <li><span>✓</span> Navigasi ringkas dan konsisten</li>
+            <li><span>✓</span> Informasi dikelompokkan per kebutuhan</li>
+            <li><span>✓</span> Tampilan responsif untuk layar kecil</li>
+          </ul>
+          <a class="button button-gold" href="./sistem.html">Buka Aplikasi SILAS <span class="button-arrow" aria-hidden="true">↗</span></a>
+        </div>
+
+        <div class="dashboard-window reveal" aria-label="Ilustrasi tampilan dashboard SILAS">
+          <div class="window-chrome"><div class="window-dots"><i></i><i></i><i></i></div><div class="window-address"><span>▣</span> SILAS / Dashboard</div><span class="window-status"><i></i> Tampilan sistem</span></div>
+          <div class="dashboard-layout">
+            <aside class="preview-sidebar">
+              <div class="preview-brand"><span class="preview-brand-icon">S</span><span>SILAS<small>LAUNDRY SANTRI</small></span></div>
+              <div class="preview-nav active"><span>▦</span> Dashboard</div><div class="preview-nav"><span>♙</span> Data Santri</div><div class="preview-nav"><span>＋</span> Input Laundry</div><div class="preview-nav"><span>▤</span> Periode &amp; Tahap</div><div class="preview-nav"><span>▧</span> Laporan</div>
+              <div class="preview-sidebar-bottom"><span class="preview-mini-logo"><img src="./assets/landing/logo-ruhul-qurani.png" alt=""></span><span>Dayah Ruhul Qur’ani<small>Pelayanan yang tertata</small></span></div>
+            </aside>
+            <div class="preview-main">
+              <div class="preview-topline"><div><span class="preview-kicker">RINGKASAN OPERASIONAL</span><h3>Selamat datang di SILAS</h3><p>Kelola aktivitas laundry dengan lebih terarah.</p></div><span class="preview-avatar">RQ</span></div>
+              <div class="preview-metrics">
+                <div class="preview-metric metric-one"><span class="metric-symbol">♙</span><span class="metric-label">DATA SANTRI</span><strong>Terorganisasi</strong><small>Jenjang · Kamar</small></div>
+                <div class="preview-metric metric-two"><span class="metric-symbol">▦</span><span class="metric-label">PERIODE</span><strong>Tahap 1–8</strong><small>Urutan lebih jelas</small></div>
+                <div class="preview-metric metric-three"><span class="metric-symbol">▤</span><span class="metric-label">LAPORAN</span><strong>Terstruktur</strong><small>PDF · Excel</small></div>
+              </div>
+              <div class="preview-bottom-grid">
+                <div class="preview-panel"><div class="panel-heading"><span>Alur laundry</span><span class="panel-chip">Contoh</span></div><div class="stage-rail"><div class="stage-line"></div><div class="stage-item done"><span>01</span><small>Tahap 1</small></div><div class="stage-item done"><span>02</span><small>Tahap 2</small></div><div class="stage-item current"><span>03</span><small>Tahap 3</small></div><div class="stage-item"><span>04</span><small>Berikutnya</small></div></div><p class="panel-footnote">Ilustrasi alur — bukan data aktual.</p></div>
+                <div class="preview-panel issue-panel"><div class="panel-heading"><span>Catatan penting</span><span class="issue-dot"></span></div><div class="issue-row"><span class="issue-icon">!</span><span><strong>Laporan masalah</strong><small>Catat dan tindak lanjuti</small></span><span class="issue-chevron">›</span></div><div class="issue-row"><span class="issue-icon gold-icon">↗</span><span><strong>Ekspor laporan</strong><small>Siap ditinjau kembali</small></span><span class="issue-chevron">›</span></div></div>
+              </div>
+              <div class="preview-disclaimer">Pratinjau desain · Data contoh, bukan statistik produksi</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section workflow-section" id="alur" aria-labelledby="workflowTitle">
+      <div class="seigaiha-watermark" aria-hidden="true"></div>
+      <div class="page-width">
+        <div class="section-heading reveal">
+          <span class="eyebrow"><span class="eyebrow-mark"></span> ALUR KERJA <span class="eyebrow-mark"></span></span>
+          <h2 id="workflowTitle">Dari pencatatan hingga laporan.</h2>
+          <p>Alur sederhana membantu pekerjaan tetap konsisten dari awal sampai akhir.</p>
+        </div>
+        <div class="workflow-grid">
+          <article class="workflow-step reveal"><span class="workflow-index">01</span><span class="workflow-icon" aria-hidden="true">♙</span><h3>Pilih data santri</h3><p>Temukan santri dan periksa informasi jenjang serta kamar.</p><span class="workflow-connector" aria-hidden="true">→</span></article>
+          <article class="workflow-step reveal" style="--reveal-delay:90ms"><span class="workflow-index">02</span><span class="workflow-icon" aria-hidden="true">▦</span><h3>Catat tahap laundry</h3><p>Masukkan informasi laundry pada periode dan tahap yang sesuai.</p><span class="workflow-connector" aria-hidden="true">→</span></article>
+          <article class="workflow-step reveal" style="--reveal-delay:180ms"><span class="workflow-index">03</span><span class="workflow-icon" aria-hidden="true">▤</span><h3>Tinjau laporan</h3><p>Gunakan rekap untuk memeriksa catatan dan tindak lanjut.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section spirit-section" id="semangat" aria-labelledby="spiritTitle">
+      <div class="spirit-pattern spirit-pattern-left" aria-hidden="true"></div>
+      <div class="spirit-pattern spirit-pattern-right" aria-hidden="true"></div>
+      <div class="page-width spirit-layout">
+        <div class="spirit-copy reveal">
+          <span class="eyebrow"><span class="eyebrow-mark"></span> NILAI DI BALIK LAYANAN</span>
+          <h2 id="spiritTitle">Setiap catatan adalah bagian dari <em>amanah.</em></h2>
+          <p>Di lingkungan dayah, ketertiban bukan sekadar administrasi. Pencatatan yang rapi membantu pelayanan laundry santri lebih mudah ditinjau, dipahami, dan ditindaklanjuti.</p>
+          <div class="spirit-values">
+            <span><i aria-hidden="true">✦</i> Disiplin</span>
+            <span><i aria-hidden="true">✦</i> Tanggung jawab</span>
+            <span><i aria-hidden="true">✦</i> Pelayanan</span>
+          </div>
+          <div class="spirit-japanese" lang="ja" aria-label="Ketulusan, ketelitian, dan harmoni">
+            <span>誠</span><i>·</i><span>丁寧</span><i>·</i><span>和</span>
+            <small>SEIKAKU · TEINEI · WA</small>
+          </div>
+        </div>
+        <figure class="spirit-photo-frame reveal">
+          <span class="spirit-photo-ring" aria-hidden="true"></span>
+          <img src="./assets/landing/santri-ibadah.jpg" alt="Santri Dayah Ruhul Qur’ani berdiri dalam saf di dalam masjid" loading="lazy">
+          <figcaption>
+            <span class="spirit-caption-kicker">DAYAH RUHUL QUR’ANI</span>
+            <strong>Menjaga amanah dalam setiap pelayanan</strong>
+            <span class="spirit-caption-jp" lang="ja">共に、丁寧に。</span>
+          </figcaption>
+          <span class="spirit-photo-corner" aria-hidden="true"></span>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section vision-section" id="pengembangan" aria-labelledby="visionTitle">
+      <div class="page-width vision-layout">
+        <div class="vision-photo-wrap reveal">
+          <img class="vision-photo" src="./assets/landing/santri-group.jpg" alt="Santri Dayah Ruhul Qur’ani berkumpul bersama di dalam masjid" loading="lazy">
+          <div class="vision-photo-label"><span class="vision-label-icon" aria-hidden="true">✦</span><span><strong>Berangkat dari kebutuhan dayah</strong><small>Terus bertumbuh dengan terarah</small></span></div>
+          <div class="photo-corner" aria-hidden="true"></div>
+        </div>
+        <div class="vision-copy reveal">
+          <span class="eyebrow"><span class="eyebrow-mark"></span> ARAH PENGEMBANGAN</span>
+          <h2 id="visionTitle">Dari operasional harian menuju <em>monitoring yang lebih luas.</em></h2>
+          <p>SILAS dapat dikembangkan secara bertahap agar kebutuhan laundry dayah semakin mudah dipantau, dengan tetap menjaga keamanan dan ketepatan data.</p>
+          <div class="roadmap-list">
+            <div class="roadmap-item"><span class="roadmap-icon">01</span><div><strong>Penguatan data operasional</strong><p>Memastikan pencatatan setiap owner rapi dan konsisten.</p></div><span class="roadmap-status status-current">Fondasi</span></div>
+            <div class="roadmap-item"><span class="roadmap-icon">02</span><div><strong>Monitoring lintas owner</strong><p>Rencana dashboard pusat untuk melihat perkembangan setiap owner.</p></div><span class="roadmap-status status-plan">Rencana</span></div>
+            <div class="roadmap-item"><span class="roadmap-icon">03</span><div><strong>Rekap dan laporan terpusat</strong><p>Rencana laporan konsolidasi untuk mendukung evaluasi dayah.</p></div><span class="roadmap-status status-plan">Rencana</span></div>
+          </div>
+          <p class="vision-disclaimer"><span aria-hidden="true">ⓘ</span> Monitoring banyak owner adalah arah pengembangan, bukan klaim fitur yang sudah aktif.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="closing-section" id="tentang" aria-labelledby="closingTitle">
+      <div class="closing-pattern" aria-hidden="true"></div>
+      <div class="closing-torii" aria-hidden="true"><span></span></div>
+      <div class="closing-sakura" aria-hidden="true"><span>✿</span><span>✿</span><span>✿</span></div>
+      <div class="page-width closing-inner reveal">
+        <div class="closing-emblem"><img src="./assets/landing/logo-ruhul-qurani.png" alt="Logo Ruhul Qur’ani" loading="lazy"></div>
+        <span class="eyebrow eyebrow-light">SILAS · DAYAH RUHUL QUR’ANI</span>
+        <h2 id="closingTitle">Pelayanan lebih tertata.<br><em>Ikhtiar yang terus bertumbuh.</em></h2>
+        <p>Teknologi menjadi sarana untuk mendukung pelayanan laundry santri dengan lebih rapi, jelas, dan bertanggung jawab.</p>
+        <a class="button button-gold closing-button" href="./sistem.html">Masuk ke Aplikasi SILAS <span class="button-arrow" aria-hidden="true">↗</span></a>
+        <div class="closing-jp" lang="ja">誠実に、丁寧に、共に前へ。</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="page-width footer-main">
+      <a class="footer-brand" href="#beranda" aria-label="Kembali ke atas"><span class="footer-logo-rq"><img src="./assets/landing/logo-ruhul-qurani.png" alt="Logo Dayah Ruhul Qur’ani" loading="lazy"></span><span class="footer-logo-bud"><img src="./assets/landing/logo-bud-rq.jpg" alt="Logo BUD RQ" loading="lazy"></span></a>
+      <p class="footer-motto">“Pelayanan lebih tertata, amanah lebih terjaga, dan ikhtiar kebaikan terus bertumbuh.”</p>
+      <div class="footer-links"><a href="#beranda">Beranda</a><a href="#fitur">Fitur</a><a href="#pengembangan">Pengembangan</a><a href="./sistem.html">Masuk Sistem ↗</a></div>
+    </div>
+    <div class="footer-bottom"><div class="page-width"><span>© <span id="currentYear">2026</span> SILAS · Dayah Ruhul Qur’ani</span><span class="footer-bottom-note"><i aria-hidden="true"></i> Sistem Informasi Laundry Santri</span></div></div>
+  </footer>
+
+  <dialog class="feature-dialog" id="featureDialog" aria-labelledby="dialogTitle">
+    <form method="dialog"><button class="dialog-close" aria-label="Tutup detail" value="close">×</button></form>
+    <div class="dialog-symbol" id="dialogSymbol" aria-hidden="true">✦</div>
+    <span class="eyebrow" id="dialogEyebrow">FITUR SILAS</span>
+    <h2 id="dialogTitle">Detail Fitur</h2>
+    <p id="dialogDescription"></p>
+    <ul class="dialog-points" id="dialogPoints"></ul>
+    <a class="button button-navy dialog-cta" href="./sistem.html">Masuk Sistem <span aria-hidden="true">↗</span></a>
+    <p class="dialog-note">Fitur dan data operasional tersedia setelah masuk ke aplikasi.</p>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="./landing.js" defer></script>
+</body>
+</html>

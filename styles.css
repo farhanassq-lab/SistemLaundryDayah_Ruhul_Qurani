@@ -3739,3 +3739,238 @@ input, select, textarea { max-width: 100%; }
     transition: none !important;
   }
 }
+
+/* ===== CINEMATIC LOGIN MOTION V2 =====
+   Slower entrance + visible split-washi-card tear + slower dashboard reveal. */
+
+/* Slow the opening panels when the login screen first appears. */
+.auth-screen.is-door-opening::before {
+  animation-duration: 1.95s !important;
+}
+.auth-screen.is-door-opening::after {
+  animation-duration: 1.95s !important;
+}
+.auth-screen.is-door-opening .auth-art {
+  animation-duration: 1.25s !important;
+  animation-delay: .20s !important;
+}
+.auth-screen.is-door-opening .auth-panel {
+  animation-duration: 1.25s !important;
+  animation-delay: .32s !important;
+}
+.auth-screen.is-door-opening .auth-brand {
+  animation-duration: 1.10s !important;
+  animation-delay: .38s !important;
+}
+.auth-screen.is-door-opening .auth-message {
+  animation-duration: 1.20s !important;
+  animation-delay: .42s !important;
+}
+
+/* The auth panel is the coordinate space for the card-tear overlay. */
+.auth-panel {
+  position: relative;
+  overflow: visible;
+}
+
+#loginForm.is-tearing-source {
+  opacity: 0 !important;
+  animation: none !important;
+  pointer-events: none !important;
+}
+#loginForm.is-tearing-source::before,
+#loginForm.is-tearing-source::after {
+  content: none !important;
+  animation: none !important;
+}
+
+/* Two real visual copies of the login card are clipped along a jagged edge. */
+.auth-tear-stage {
+  position: absolute;
+  z-index: 50;
+  pointer-events: none;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+
+.auth-tear-sheet {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(185, 207, 236, .98) !important;
+  border-radius: 25px !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(223,184,108,.17), transparent 32%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.20) 0 2px, rgba(225,236,249,.20) 2px 4px),
+    linear-gradient(145deg, #fffef9 0%, #f5f8ff 56%, #e7f0fc 100%) !important;
+  box-shadow: 0 22px 45px rgba(4, 20, 45, .24), inset 0 1px 0 #fff !important;
+  opacity: 1 !important;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  filter: drop-shadow(0 8px 7px rgba(5, 24, 52, .12));
+}
+
+.auth-tear-sheet::before,
+.auth-tear-sheet::after {
+  content: none !important;
+  animation: none !important;
+}
+
+.auth-tear-sheet > * {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-tear-sheet.tear-top {
+  clip-path: polygon(
+    0 0, 100% 0, 100% 43%, 95% 47%, 90% 42%, 84% 49%,
+    78% 43%, 72% 50%, 66% 42%, 60% 48%, 54% 43%, 48% 50%,
+    42% 43%, 36% 48%, 30% 42%, 24% 49%, 18% 43%, 12% 48%,
+    6% 42%, 0 47%
+  );
+}
+
+.auth-tear-sheet.tear-bottom {
+  clip-path: polygon(
+    0 47%, 6% 42%, 12% 48%, 18% 43%, 24% 49%, 30% 42%,
+    36% 48%, 42% 43%, 48% 50%, 54% 43%, 60% 48%, 66% 42%,
+    72% 50%, 78% 43%, 84% 49%, 90% 42%, 95% 47%, 100% 43%,
+    100% 100%, 0 100%
+  );
+}
+
+.auth-tear-stage.is-active .auth-tear-sheet.tear-top {
+  animation: silas-washi-tear-top 2.08s cubic-bezier(.25,.72,.15,1) .16s forwards;
+}
+.auth-tear-stage.is-active .auth-tear-sheet.tear-bottom {
+  animation: silas-washi-tear-bottom 2.08s cubic-bezier(.25,.72,.15,1) .16s forwards;
+}
+
+/* A bright vermilion-and-gold tear seam makes the split unmistakable. */
+.auth-tear-seam {
+  position: absolute;
+  z-index: 8;
+  left: -1%;
+  top: 42.8%;
+  width: 102%;
+  height: 22px;
+  opacity: 0;
+  transform: scaleX(.04);
+  transform-origin: center;
+  clip-path: polygon(
+    0 40%, 5% 5%, 10% 62%, 16% 20%, 23% 80%, 31% 25%,
+    39% 73%, 47% 12%, 55% 80%, 63% 30%, 72% 70%, 81% 18%,
+    90% 72%, 96% 15%, 100% 45%, 100% 65%, 96% 48%, 90% 100%,
+    81% 56%, 72% 100%, 63% 57%, 55% 100%, 47% 52%, 39% 100%,
+    31% 52%, 23% 100%, 16% 47%, 10% 100%, 5% 48%, 0 100%
+  );
+  background: linear-gradient(90deg, #b84b38 0%, #f0d69b 22%, #fff9e8 49%, #f0d69b 75%, #b84b38 100%);
+  filter: drop-shadow(0 0 9px rgba(231, 188, 102, .72));
+}
+
+.auth-tear-stage.is-active .auth-tear-seam {
+  animation: silas-washi-seam 1.75s cubic-bezier(.22,.8,.2,1) .05s forwards;
+}
+
+.auth-tear-fragment {
+  position: absolute;
+  z-index: 12;
+  top: 42%;
+  width: 17px;
+  height: 22px;
+  opacity: 0;
+  border: 1px solid rgba(255,255,255,.7);
+  background: linear-gradient(145deg, #fffdf6 0%, #dfb86c 52%, #b84b38 100%);
+  clip-path: polygon(48% 0, 100% 32%, 71% 100%, 12% 72%, 0 24%);
+  filter: drop-shadow(0 3px 5px rgba(5,24,52,.22));
+}
+
+.auth-tear-stage.is-active .auth-tear-fragment {
+  animation: silas-washi-fragment 1.65s cubic-bezier(.2,.7,.2,1) var(--tear-delay) forwards;
+}
+
+@keyframes silas-washi-tear-top {
+  0% { opacity: 1; transform: translate3d(0,0,0) rotate(0) scale(1); filter: drop-shadow(0 0 0 rgba(5,24,52,0)); }
+  18% { opacity: 1; transform: translate3d(-3px,-4px,0) rotate(-.6deg) scale(1.005); }
+  100% { opacity: 0; transform: translate3d(-18px,-125%,0) rotate(-7deg) scale(.97); filter: drop-shadow(0 22px 18px rgba(5,24,52,.24)); }
+}
+
+@keyframes silas-washi-tear-bottom {
+  0% { opacity: 1; transform: translate3d(0,0,0) rotate(0) scale(1); filter: drop-shadow(0 0 0 rgba(5,24,52,0)); }
+  18% { opacity: 1; transform: translate3d(3px,4px,0) rotate(.6deg) scale(1.005); }
+  100% { opacity: 0; transform: translate3d(18px,125%,0) rotate(7deg) scale(.97); filter: drop-shadow(0 22px 18px rgba(5,24,52,.24)); }
+}
+
+@keyframes silas-washi-seam {
+  0% { opacity: 0; transform: scaleX(.04); }
+  18% { opacity: 1; transform: scaleX(1); }
+  58% { opacity: .95; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(1.04); }
+}
+
+@keyframes silas-washi-fragment {
+  0% { opacity: 0; transform: translate3d(0,0,0) scale(.35) rotate(0); }
+  18% { opacity: .98; }
+  100% { opacity: 0; transform: translate3d(var(--tear-x),var(--tear-y),0) scale(1) rotate(var(--tear-rotate)); }
+}
+
+/* The dashboard remains behind closed doors for a moment, then opens slowly. */
+.dashboard-door-panel {
+  transition:
+    transform 1.88s cubic-bezier(.77, 0, .18, 1),
+    opacity 1.55s ease,
+    filter 1.88s ease !important;
+}
+
+@media (max-width: 850px) {
+  .auth-tear-sheet {
+    border-radius: 22px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .auth-tear-sheet {
+    border-radius: 20px !important;
+  }
+
+  .auth-tear-seam {
+    top: 43.5%;
+    height: 17px;
+  }
+
+  .auth-tear-fragment {
+    width: 13px;
+    height: 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-screen.is-door-opening::before,
+  .auth-screen.is-door-opening::after,
+  .auth-screen.is-door-opening .auth-art,
+  .auth-screen.is-door-opening .auth-panel,
+  .auth-screen.is-door-opening .auth-brand,
+  .auth-screen.is-door-opening .auth-message,
+  .auth-tear-stage.is-active .auth-tear-sheet,
+  .auth-tear-stage.is-active .auth-tear-seam,
+  .auth-tear-stage.is-active .auth-tear-fragment {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .auth-tear-sheet.tear-top,
+  .auth-tear-sheet.tear-bottom {
+    opacity: 0;
+  }
+
+  .dashboard-door-panel,
+  .dashboard-door-brand,
+  .dashboard-door-seam {
+    transition: none !important;
+  }
+}

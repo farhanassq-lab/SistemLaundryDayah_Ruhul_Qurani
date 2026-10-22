@@ -19,3 +19,13 @@ The delete button removes one `catatan_laundry` row after confirmation. It is a 
 
 ## Note
 This package was syntax-checked with Node.js (`node --check app.js`) but was not connected to the user's live Supabase project during testing.
+
+
+## Revisi animasi login SILAS
+- Saat halaman login tampil, dua panel pintu bergerak dari tengah ke samping.
+- Form login ditampilkan sebagai kartu premium biru-putih dengan aksen emas.
+- Setelah Supabase memverifikasi email dan password dengan benar, kartu login dianimasikan seperti kertas sobek.
+- Setelah efek sobek, dashboard muncul di balik dua panel pintu yang kemudian terbuka.
+- Kredensial salah tetap menampilkan pesan kesalahan dan tidak menjalankan animasi masuk dashboard.
+- Menambahkan dukungan `prefers-reduced-motion` untuk pengguna yang memilih animasi minimal.
+- Tidak ada perubahan skema database atau konfigurasi Supabase.
