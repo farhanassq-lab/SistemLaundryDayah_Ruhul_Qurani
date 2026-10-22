@@ -1286,7 +1286,8 @@ async function renderIssueReports() {
         <div class="issue-report-actions">
           <label class="issue-status-control"><span>Status tindak lanjut</span><select class="issue-status-select" aria-label="Status tindak lanjut">${statusOptions}</select></label>
           <button class="btn btn-light btn-sm" type="button" data-issue-action="status" data-issue-id="${escapeHtml(issue.id)}">Simpan status</button>
-          <button class="btn btn-whatsapp btn-sm" type="button" data-issue-action="whatsapp" data-issue-id="${escapeHtml(issue.id)}">☏ WhatsApp</button>
+          <button class="btn btn-whatsapp btn-sm" type="button" data-issue-action="whatsapp" data-issue-id="${escapeHtml(issue.id)}">☏ WhatsApp + Foto</button>
+          <button class="btn btn-danger btn-sm" type="button" data-issue-action="delete" data-issue-id="${escapeHtml(issue.id)}" aria-label="Hapus laporan ${escapeHtml(issue.santri_nama_snapshot)}">Hapus laporan</button>
         </div>
       </article>`;
   }));
@@ -1358,39 +1359,136 @@ function buildIssueWhatsAppMessage(issue) {
 async function shareIssueReportToWhatsApp(issueId, button) {
   const issue = state.issueReports.find(item => String(item.id) === String(issueId));
   if (!issue) return showToast('Laporan tidak ditemukan. Muat ulang daftar dan coba lagi.', 'error');
+
   const message = buildIssueWhatsAppMessage(issue);
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
 
   if (!issue.foto_path) {
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    showToast('Pesan dibuka di WhatsApp. Laporan ini tidak memiliki foto bukti.', 'info');
     return;
   }
 
-  // Buka jendela cadangan secara sinkron agar browser tidak memblokirnya jika file sharing tidak tersedia.
+  // Buka jendela cadangan langsung pada interaksi pengguna agar tidak diblokir browser.
   const fallbackWindow = window.open('about:blank', '_blank');
   setBusy(button, true, 'Menyiapkan foto…');
   try {
-    const { data, error } = await state.supabase.storage.from(ISSUE_BUCKET).download(issue.foto_path);
+    const { data: blob, error } = await state.supabase.storage.from(ISSUE_BUCKET).download(issue.foto_path);
     if (error) throw error;
-    const fileType = data?.type || 'image/jpeg';
-    const file = new File([data], `SILAS-bukti-${issue.id}.${fileType.includes('png') ? 'png' : fileType.includes('webp') ? 'webp' : 'jpg'}`, { type: fileType });
+
+    const fileType = blob?.type || 'image/jpeg';
+    const extension = fileType.includes('png') ? 'png' : fileType.includes('webp') ? 'webp' : 'jpg';
+    const file = new File([blob], `SILAS-bukti-${issue.id}.${extension}`, { type: fileType });
+
+    // On supported phones/tablets, share the actual image file and message through the OS share sheet.
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
       if (fallbackWindow && !fallbackWindow.closed) fallbackWindow.close();
-      await navigator.share({ files: [file], text: message, title: 'Laporan Masalah Laundry SILAS' });
-      showToast('Pilih WhatsApp lalu pilih grup laundry untuk mengirim pesan dan foto.', 'info', 'Siap dibagikan');
+      try {
+        await navigator.share({
+          files: [file],
+          text: message,
+          title: 'Laporan Masalah Laundry SILAS'
+        });
+        showToast('Pilih WhatsApp pada menu berbagi, lalu pilih grup laundry untuk mengirim pesan dan foto.', 'info', 'Siap dibagikan');
+      } catch (shareError) {
+        if (shareError?.name === 'AbortError') {
+          showToast('Berbagi foto dibatalkan. Laporan tetap tersimpan.', 'info');
+          return;
+        }
+        throw shareError;
+      }
       return;
     }
 
-    try { await navigator.clipboard.writeText(message); } catch (clipboardError) { console.warn('Clipboard tidak tersedia:', clipboardError); }
-    if (fallbackWindow && !fallbackWindow.closed) fallbackWindow.location.href = whatsappUrl;
-    else window.location.href = whatsappUrl;
-    showToast('Pesan dibuka di WhatsApp. Lampirkan foto yang sudah diunduh secara manual jika diperlukan.', 'info', 'Pesan disiapkan');
+    // Desktop/browser fallback: download the actual private photo, then open WhatsApp with text.
+    const objectUrl = URL.createObjectURL(blob);
+    const downloadLink = document.createElement('a');
+    downloadLink.href = objectUrl;
+    downloadLink.download = `SILAS-bukti-${issue.id}.${extension}`;
+    downloadLink.style.display = 'none';
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    downloadLink.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+
+    try {
+      await navigator.clipboard.writeText(message);
+    } catch (clipboardError) {
+      console.warn('Clipboard tidak tersedia:', clipboardError);
+    }
+
+    if (fallbackWindow && !fallbackWindow.closed) {
+      fallbackWindow.location.href = whatsappUrl;
+    } else {
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    }
+
+    showToast('Foto bukti sudah diunduh dan WhatsApp dibuka. Lampirkan foto SILAS-bukti yang baru diunduh sebelum mengirim.', 'info', 'Foto siap dilampirkan');
   } catch (error) {
     console.error('Berbagi foto gagal:', error);
-    try { await navigator.clipboard.writeText(message); } catch (clipboardError) { console.warn(clipboardError); }
-    if (fallbackWindow && !fallbackWindow.closed) fallbackWindow.location.href = whatsappUrl;
-    else window.location.href = whatsappUrl;
-    showToast('Pesan WhatsApp disiapkan. Jika foto tidak ikut, lampirkan foto dari galeri secara manual.', 'info', 'Mode cadangan');
+    if (fallbackWindow && !fallbackWindow.closed) fallbackWindow.close();
+    showToast(`Foto belum berhasil disiapkan: ${friendlyError(error)}. Coba lagi atau buka foto dari laporan.`, 'error');
+  } finally {
+    setBusy(button, false);
+  }
+}
+
+async function deleteIssueReportFromWeb(issueId, button) {
+  const issue = state.issueReports.find(item => String(item.id) === String(issueId));
+  if (!issue) {
+    showToast('Laporan tidak ditemukan. Muat ulang daftar dan coba lagi.', 'error');
+    return;
+  }
+
+  const description = [
+    'Hapus laporan masalah ini dari SILAS?',
+    '',
+    `Santri: ${issue.santri_nama_snapshot || '-'}`,
+    `Pakaian: ${issue.nama_pakaian || '-'}`,
+    `Masalah: ${ISSUE_TYPE_LABELS[issue.jenis_masalah] || issue.jenis_masalah || '-'}`,
+    '',
+    'Data laporan akan dihapus. Foto bukti terkait juga akan dihapus dari penyimpanan jika penghapusan berhasil.',
+    'Data santri dan riwayat laundry tidak ikut dihapus.'
+  ].join('\n');
+
+  if (!window.confirm(description)) return;
+
+  setBusy(button, true, 'Menghapus…');
+  try {
+    // Delete the report first so a failed database delete never removes its photo prematurely.
+    const { data: deletedRow, error: deleteError } = await state.supabase
+      .from('laporan_masalah_laundry')
+      .delete()
+      .eq('id', issueId)
+      .select('id, foto_path')
+      .maybeSingle();
+
+    if (deleteError) throw deleteError;
+    if (!deletedRow) {
+      throw new Error('Laporan tidak terhapus. Periksa izin akses akun atau muat ulang daftar.');
+    }
+
+    state.issueReports = state.issueReports.filter(item => String(item.id) !== String(issueId));
+    await renderIssueReports();
+
+    if (deletedRow.foto_path) {
+      const { error: photoDeleteError } = await state.supabase
+        .storage
+        .from(ISSUE_BUCKET)
+        .remove([deletedRow.foto_path]);
+
+      if (photoDeleteError) {
+        console.error('Laporan terhapus tetapi foto gagal dihapus:', photoDeleteError);
+        showToast('Laporan terhapus, tetapi foto bukti belum berhasil dihapus dari Storage. Minta admin memeriksa Storage.', 'warning', 'Perlu pemeriksaan foto');
+        return;
+      }
+    }
+
+    showToast('Laporan dan foto buktinya berhasil dihapus. Data santri tetap aman.', 'success', 'Laporan dihapus');
+  } catch (error) {
+    console.error('Hapus laporan gagal:', error);
+    showToast(`Laporan belum berhasil dihapus: ${friendlyError(error)}`, 'error', 'Gagal menghapus');
+    await loadIssueReports({ silent: true });
   } finally {
     setBusy(button, false);
   }
@@ -1404,6 +1502,10 @@ async function onIssueReportsAction(event) {
   if (!issue) return;
   if (button.dataset.issueAction === 'whatsapp') {
     await shareIssueReportToWhatsApp(issueId, button);
+    return;
+  }
+  if (button.dataset.issueAction === 'delete') {
+    await deleteIssueReportFromWeb(issueId, button);
     return;
   }
   if (button.dataset.issueAction === 'status') {
