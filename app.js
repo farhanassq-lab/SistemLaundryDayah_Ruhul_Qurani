@@ -319,34 +319,6 @@ async function openDashboardWithDoors() {
   transition.setAttribute('aria-hidden', 'true');
 }
 
-async function start() {
-  try { state.defaultDayahLogoData = await imageUrlToDataUrl('./assets/logo-ruhul-qurani.png'); } catch (error) { console.warn('Logo default tidak dapat dimuat', error); }
-  state.supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-  });
-  wireEvents();
-  const { data, error } = await state.supabase.auth.getSession();
-  if (error) console.warn(error);
-  if (data?.session?.user) {
-    state.user = data.session.user;
-    showApp();
-    await refreshAll();
-  } else showAuth();
-  state.supabase.auth.onAuthStateChange((_event, session) => {
-    if (session?.user) {
-      state.user = session.user;
-      // Saat login manual, biarkan onLogin menjalankan animasi sobekan dan pintu.
-      if (state.loginTransitionInProgress) return;
-      showApp();
-      // Jalankan query setelah callback auth selesai untuk menghindari auth-lock.
-      window.setTimeout(() => refreshAll(), 0);
-    } else {
-      state.user = null;
-      showAuth();
-    }
-  });
-}
-
 function wireEvents() {
   $('#loginForm').addEventListener('submit', onLogin);
   $('#logoutBtn').addEventListener('click', async () => {
