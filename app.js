@@ -461,6 +461,17 @@ function wireEvents() {
     if (event.key === 'Escape') $('#studentSuggestions').classList.add('hidden');
   });
   $('#laundryForm').addEventListener('submit', onSaveLaundry);
+
+  // Jumlah pakaian wajib diisi dengan bilangan bulat minimal 1 potong.
+  const piecesInput = $('#piecesInput');
+  if (piecesInput) {
+    piecesInput.required = true;
+    piecesInput.min = '1';
+    piecesInput.max = '100000';
+    piecesInput.step = '1';
+    piecesInput.inputMode = 'numeric';
+  }
+
   $('#laundryForm').addEventListener('reset', () => {
     window.setTimeout(() => {
       state.selectedStudent = null;
@@ -699,11 +710,11 @@ async function onSaveLaundry(event) {
   const stageId = $('#inputStage').value;
   const weight = Number($('#weightInput').value);
   const piecesRaw = $('#piecesInput').value.trim();
-  const pieces = piecesRaw === '' ? null : Number(piecesRaw);
+  const pieces = piecesRaw === '' ? NaN : Number(piecesRaw);
   if (!stageId) return showMessage('#laundryMessage', 'Pilih periode dan tahap laundry terlebih dahulu.', 'error');
   if (!state.selectedStudent) return showMessage('#laundryMessage', 'Pilih nama santri dari daftar saran agar biodatanya terhubung.', 'error');
   if (!Number.isFinite(weight) || weight <= 0 || weight > 9999) return showMessage('#laundryMessage', 'Berat wajib berupa angka lebih dari 0 kg dan maksimal 9999 kg.', 'error');
-  if (pieces !== null && (!Number.isInteger(pieces) || pieces < 0 || pieces > 100000)) return showMessage('#laundryMessage', 'Jumlah pakaian harus bilangan bulat nol atau lebih, atau dikosongkan.', 'error');
+  if (!Number.isInteger(pieces) || pieces < 1 || pieces > 100000) return showMessage('#laundryMessage', 'Jumlah pakaian wajib diisi dengan bilangan bulat minimal 1 potong dan maksimal 100.000 potong.', 'error');
   const student = state.selectedStudent;
   const selectedStage = state.stages.find(stage => stage.id === stageId);
   if (!selectedStage) return showMessage('#laundryMessage', 'Tahap tidak ditemukan. Muat ulang data dan coba lagi.', 'error');
@@ -726,8 +737,8 @@ async function onSaveLaundry(event) {
     showMessage('#laundryMessage', /duplicate key|unique constraint/i.test(error.message) ? 'Santri ini sudah tercatat pada tahap tersebut. Jika perlu menambah transaksi lain, periksa aturan pencatatan dayah.' : message, 'error');
     return;
   }
-  showMessage('#laundryMessage', `Catatan ${student.nama} berhasil disimpan: ${fmt.format(weight)} kg.`, 'success');
-  showToast(`Catatan ${student.nama} berhasil disimpan: ${fmt.format(weight)} kg.`, 'success', 'Laundry tersimpan');
+  showMessage('#laundryMessage', `Catatan ${student.nama} berhasil disimpan: ${fmt.format(weight)} kg dan ${fmtInt.format(pieces)} potong pakaian.`, 'success');
+  showToast(`Catatan ${student.nama} berhasil disimpan: ${fmt.format(weight)} kg · ${fmtInt.format(pieces)} potong pakaian.`, 'success', 'Laundry tersimpan');
   $('#weightInput').value = '';
   $('#piecesInput').value = '';
   $('#studentSearch').value = '';
