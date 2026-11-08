@@ -1818,13 +1818,11 @@ async function createMonthlyPdf(period, stages, records) {
     return drawRoomIdentity(headerStart + 2, level, room);
   }
 
+  // Setiap halaman lanjutan mengulang KOP lengkap dan identitas kamar yang sama.
+  // Fungsi ini dipanggil melalui hook willDrawPage agar header digambar SEBELUM tabel.
   function drawRoomContinuationHeader(level, room) {
-    const headerStart = drawFormalLetterhead(`${reportTitle} (LANJUTAN)`);
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(6.3);
-    doc.setTextColor(70, 70, 70);
-    doc.text(`Lanjutan jenjang ${safePdfText(level)} · kamar ${safePdfText(room)}`, left, headerStart + 2.5, { maxWidth: contentWidth });
-    return headerStart + 6;
+    const headerStart = drawFormalLetterhead(reportTitle);
+    return drawRoomIdentity(headerStart + 2, level, room);
   }
 
   function formatPiecesLabel(value, hasPieces, missingCount, mode = 'normal') {
@@ -1944,8 +1942,10 @@ async function createMonthlyPdf(period, stages, records) {
         let startY;
         if (roomSequence === 1) {
           const firstHeader = drawFormalLetterhead(reportTitle);
-          startY = drawPeriodSummary(firstHeader + 1);
-          startY = drawRoomIdentity(startY + 1.5, level, room);
+          // Identitas jenjang dan kamar diletakkan langsung di bawah KOP.
+          startY = drawRoomIdentity(firstHeader + 2, level, room);
+          // Ringkasan periode diletakkan setelah identitas kamar agar urutannya rapi.
+          startY = drawPeriodSummary(startY + 1.5);
         } else {
           startY = addRoomStartPage(level, room);
         }
@@ -1961,7 +1961,8 @@ async function createMonthlyPdf(period, stages, records) {
           head: [['No', 'Nama santri', ...stageHeads, 'Total\nBerat', 'Total\nPakaian']],
           body,
           theme: 'grid',
-          margin: { left, right, top: 20, bottom: 15 },
+          // Ruang atas disediakan untuk KOP + identitas kamar pada halaman lanjutan.
+          margin: { left, right, top: 68, bottom: 15 },
           showHead: 'everyPage',
           rowPageBreak: 'avoid',
           styles: {
@@ -2006,7 +2007,8 @@ async function createMonthlyPdf(period, stages, records) {
               data.cell.styles.textColor = [20, 20, 20];
             }
           },
-          didDrawPage: data => {
+          willDrawPage: data => {
+            // Hook ini berjalan sebelum baris tabel digambar, sehingga KOP tidak menimpa tabel.
             if (Number(data.pageNumber || 1) > 1) {
               drawRoomContinuationHeader(level, room);
             }

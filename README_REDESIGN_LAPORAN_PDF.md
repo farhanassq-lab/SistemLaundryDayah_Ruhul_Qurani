@@ -58,3 +58,11 @@ Saat tombol dipilih, sistem meminta konfirmasi dan menjelaskan dampak penghapusa
 - Di bawah KOP ditampilkan informasi periode, jenjang, kamar, dan tanggal cetak dengan gaya formal.
 - Warna laporan disederhanakan menjadi formal/minimal.
 - Setiap kolom Tahap 1–8 menampilkan berat dan jumlah pakaian dalam satu sel.
+
+
+## Pembaruan V12 — KOP pada setiap halaman lanjutan
+- Jika data satu kamar berlanjut ke halaman kedua atau seterusnya, KOP surat lengkap diulang pada setiap halaman.
+- Informasi periode, jenjang, kamar, dan tanggal cetak juga diulang pada halaman lanjutan.
+- Header digambar sebelum isi tabel (bukan sesudah tabel), sehingga tidak menimpa baris santri.
+- Area atas halaman lanjutan disediakan khusus untuk KOP dan identitas kamar.
+- Pada halaman pertama, informasi jenjang dan kamar diletakkan tepat di bawah KOP; ringkasan periode berada setelahnya.
