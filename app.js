@@ -1583,106 +1583,461 @@ function addPdfLogo(doc, dataUrl, x, y, w, h, fallbackLabel) {
 }
 
 async function createMonthlyPdf(period, stages, records) {
-  const doc = new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-  const pageWidth = 297, pageHeight = 210, left = 10, right = 10;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const pageWidth = 297;
+  const pageHeight = 210;
+  const left = 10;
+  const right = 10;
+  const contentWidth = pageWidth - left - right;
   const settings = state.reportSettings || {};
+
   const dayahLogo = settings.logo_dayah_data || state.defaultDayahLogoData;
   const laundryLogo = settings.logo_laundry_data || null;
   const dayahName = safePdfText(settings.nama_dayah || 'Dayah Ruhul Qur’ani');
   const address = safePdfText(settings.alamat || '');
   const contact = safePdfText(settings.kontak || '');
   const reportTitle = safePdfText(settings.judul_laporan || 'REKAPITULASI LAUNDRY SANTRI');
+  const periodNumber = Number(period?.nomor_periode || 0);
+
   const stageById = new Map(stages.map(stage => [stage.id, Number(stage.nomor_tahap)]));
-  const totalKg = records.reduce((sum,row) => sum + Number(row.berat_kg || 0), 0);
-  const totalPieces = records.reduce((sum,row) => sum + (row.jumlah_pakaian === null ? 0 : Number(row.jumlah_pakaian || 0)), 0);
-  const uniqueStudents = new Set(records.map(row => row.santri_id)).size;
+  const stageByNumber = new Map(stages.map(stage => [Number(stage.nomor_tahap), stage]));
+  const totalKg = records.reduce((sum, row) => sum + Number(row.berat_kg || 0), 0);
+  const totalPieces = records.reduce((sum, row) => {
+    if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) return sum;
+    return sum + Number(row.jumlah_pakaian || 0);
+  }, 0);
+  const uniqueStudents = new Set(records.map(row => row.santri_id).filter(Boolean)).size;
+  const missingPieceRecords = records.filter(row =>
+    row.jumlah_pakaian === null || row.jumlah_pakaian === undefined
+  ).length;
+  const knownPieceRecords = records.length - missingPieceRecords;
+  const totalPiecesLabel = records.length === 0
+    ? '0'
+    : knownPieceRecords > 0
+      ? `${fmtInt.format(totalPieces)}${missingPieceRecords ? '*' : ''}`
+      : '—';
+  const generatedAt = new Date().toLocaleString('id-ID', {
+    day: '2-digit', month: 'long', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
 
-  // Kop surat: logo laundry di kiri, identitas di tengah, logo dayah di kanan.
-  addPdfLogo(doc, laundryLogo, 10, 7, 23, 23, 'LOGO\nLAUNDRY');
-  addPdfLogo(doc, dayahLogo, 264, 7, 23, 23, 'LOGO\nDAYAH');
-  doc.setTextColor(15,39,77); doc.setFont('helvetica','bold'); doc.setFontSize(12.5);
-  doc.text(dayahName, pageWidth/2, 11, {align:'center', maxWidth:220});
-  doc.setFont('helvetica','bold'); doc.setFontSize(10.5);
-  doc.text(reportTitle, pageWidth/2, 17, {align:'center', maxWidth:220});
-  doc.setFont('helvetica','normal'); doc.setFontSize(7.4); doc.setTextColor(71,85,105);
-  let headerY = 22;
-  if (address) { const addressLines = doc.splitTextToSize(address, 218); doc.text(addressLines, pageWidth/2, headerY, {align:'center'}); headerY += addressLines.length*3.3; }
-  if (contact) { doc.text(contact, pageWidth/2, Math.min(headerY, 29), {align:'center', maxWidth:218}); }
-  doc.setDrawColor(15,39,77); doc.setLineWidth(.8); doc.line(10,33,287,33);
-  doc.setDrawColor(197,139,34); doc.setLineWidth(.35); doc.line(10,34.5,287,34.5);
-  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(15,39,77);
-  doc.text(`PERIODE ${Number(period.nomor_periode)}`, pageWidth/2, 41, {align:'center'});
-  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(71,85,105);
-  doc.text(`Santri tercatat: ${fmtInt.format(uniqueStudents)}   |   Total berat: ${fmt.format(totalKg)} kg   |   Total pakaian tercatat: ${fmtInt.format(totalPieces)}`, pageWidth/2, 46, {align:'center'});
+  const stageDates = stages
+    .map(stage => stage.tanggal_laundry)
+    .filter(Boolean)
+    .sort();
+  const dateRange = stageDates.length
+    ? `${shortDate(stageDates[0])} – ${shortDate(stageDates[stageDates.length - 1])}`
+    : 'Tanggal tahap belum tersedia';
 
-  const levels = [...new Set(records.map(row => row.jenjang_nama_snapshot || 'Jenjang belum diisi'))].sort((a,b)=>a.localeCompare(b,'id'));
-  let y = 53;
+  doc.setProperties({
+    title: `${reportTitle} - Periode ${periodNumber}`,
+    subject: `Rekapitulasi laundry santri Periode ${periodNumber}`,
+    author: dayahName,
+    creator: 'SILAS - Sistem Informasi Laundry Santri'
+  });
+
+  // Halaman pertama memakai kop lengkap. Halaman lanjutan memakai kop ringkas.
+  const headerPages = new Set([1]);
+
+  function drawContinuationHeader() {
+    const pageNo = doc.internal.getCurrentPageInfo().pageNumber;
+    if (headerPages.has(pageNo)) return;
+
+    doc.setFillColor(8, 43, 89);
+    doc.rect(0, 0, pageWidth, 23, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.text(dayahName, left, 8.5, { maxWidth: 175 });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.text(reportTitle, left, 14.5, { maxWidth: 175 });
+    doc.setTextColor(255, 226, 160);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.text(`PERIODE ${periodNumber} · ${dateRange}`, pageWidth - right, 14.5, {
+      align: 'right',
+      maxWidth: 95
+    });
+    doc.setDrawColor(197, 139, 34);
+    doc.setLineWidth(0.55);
+    doc.line(left, 23, pageWidth - right, 23);
+    headerPages.add(pageNo);
+  }
+
+  function addContinuationPage() {
+    doc.addPage('a4', 'landscape');
+    drawContinuationHeader();
+    return 29;
+  }
+
+  function drawMetricCard(x, y, width, label, value, note) {
+    doc.setFillColor(248, 250, 253);
+    doc.setDrawColor(222, 231, 242);
+    doc.setLineWidth(0.25);
+    doc.roundedRect(x, y, width, 18, 2, 2, 'FD');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(5.9);
+    doc.setTextColor(91, 108, 129);
+    doc.text(label.toLocaleUpperCase('id-ID'), x + 3, y + 4.2, { maxWidth: width - 6 });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(8, 43, 89);
+    doc.text(String(value), x + 3, y + 11.7, { maxWidth: width - 6 });
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(5.8);
+    doc.setTextColor(112, 127, 146);
+    doc.text(note, x + 3, y + 15.8, { maxWidth: width - 6 });
+  }
+
+  // Kop surat: logo Laundry tetap di kiri dan logo Dayah di kanan,
+  // sesuai pengaturan serta pratinjau kop surat yang sudah ada di aplikasi.
+  addPdfLogo(doc, laundryLogo, 10, 6, 23, 23, 'LOGO\nLAUNDRY');
+  addPdfLogo(doc, dayahLogo, 264, 6, 23, 23, 'LOGO\nDAYAH');
+
+  doc.setTextColor(8, 43, 89);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12.5);
+  doc.text(dayahName, pageWidth / 2, 11, { align: 'center', maxWidth: 218 });
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.text(reportTitle, pageWidth / 2, 17, { align: 'center', maxWidth: 218 });
+
+  let headerTextY = 21;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.8);
+  doc.setTextColor(83, 101, 124);
+
+  if (address) {
+    const addressLines = doc.splitTextToSize(address, 214);
+    const visibleAddressLines = addressLines.slice(0, 3);
+    doc.text(visibleAddressLines, pageWidth / 2, headerTextY, {
+      align: 'center',
+      lineHeightFactor: 1.05
+    });
+    headerTextY += visibleAddressLines.length * 2.8;
+    if (addressLines.length > 3) {
+      doc.setFontSize(5.8);
+      doc.text('Alamat dipersingkat pada kop surat.', pageWidth / 2, headerTextY, { align: 'center' });
+      headerTextY += 2.6;
+      doc.setFontSize(6.8);
+    }
+  }
+
+  if (contact) {
+    doc.text(contact, pageWidth / 2, headerTextY + 0.5, { align: 'center', maxWidth: 214 });
+    headerTextY += 3.2;
+  }
+
+  const ruleY = Math.max(33, headerTextY + 2);
+  doc.setDrawColor(8, 43, 89);
+  doc.setLineWidth(0.8);
+  doc.line(left, ruleY, pageWidth - right, ruleY);
+  doc.setDrawColor(197, 139, 34);
+  doc.setLineWidth(0.35);
+  doc.line(left, ruleY + 1.5, pageWidth - right, ruleY + 1.5);
+
+  const periodY = ruleY + 5;
+  doc.setFillColor(8, 43, 89);
+  doc.roundedRect(left, periodY, contentWidth, 8, 1.8, 1.8, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.text(`REKAPITULASI PERIODE ${periodNumber}`, left + 4, periodY + 5.2);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(255, 226, 160);
+  doc.text(`Rentang tanggal: ${dateRange}`, pageWidth - right - 4, periodY + 5.2, { align: 'right' });
+
+  const cardY = periodY + 11;
+  const cardGap = 4;
+  const cardWidth = (contentWidth - cardGap * 3) / 4;
+  drawMetricCard(left, cardY, cardWidth, 'Santri tercatat', fmtInt.format(uniqueStudents), 'Santri unik pada periode ini');
+  drawMetricCard(left + cardWidth + cardGap, cardY, cardWidth, 'Total berat', `${fmt.format(totalKg)} kg`, 'Akumulasi seluruh tahap');
+  drawMetricCard(left + (cardWidth + cardGap) * 2, cardY, cardWidth, 'Jumlah pakaian', totalPiecesLabel, 'Potong yang berhasil tercatat');
+  drawMetricCard(left + (cardWidth + cardGap) * 3, cardY, cardWidth, 'Catatan laundry', fmtInt.format(records.length), 'Jumlah transaksi tersimpan');
+
+  const noteY = cardY + 22;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.1);
+  doc.setTextColor(92, 107, 126);
+  if (missingPieceRecords) {
+    doc.text(
+      `* Ada ${fmtInt.format(missingPieceRecords)} catatan lama tanpa jumlah pakaian. Angka total pakaian hanya menjumlahkan catatan yang memiliki data.`,
+      left,
+      noteY,
+      { maxWidth: contentWidth }
+    );
+  } else {
+    doc.text(
+      'Jumlah pakaian merupakan akumulasi potong dari seluruh tahap pada periode ini.',
+      left,
+      noteY,
+      { maxWidth: contentWidth }
+    );
+  }
+
+  let y = noteY + 5.5;
+  const levels = [...new Set(records.map(row => row.jenjang_nama_snapshot || 'Jenjang belum diisi'))]
+    .sort((a, b) => a.localeCompare(b, 'id'));
+
   if (!levels.length) {
-    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(71,85,105);
-    doc.text('Belum ada catatan laundry pada periode ini.', left, y+5);
+    doc.setFillColor(248, 250, 253);
+    doc.setDrawColor(222, 231, 242);
+    doc.roundedRect(left, y + 3, contentWidth, 22, 2, 2, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(8, 43, 89);
+    doc.text('Belum ada catatan laundry pada periode ini.', left + 5, y + 12);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(100, 116, 139);
+    doc.text('Laporan tetap dibuat agar periode dapat didokumentasikan.', left + 5, y + 18);
   }
 
   for (const level of levels) {
-    if (y > 185) { doc.addPage('a4','landscape'); y = 15; }
-    doc.setFillColor(232,240,252); doc.roundedRect(left,y, pageWidth-left-right,7,1.5,1.5,'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(15,39,77);
-    doc.text(`JENJANG: ${safePdfText(level).toLocaleUpperCase('id-ID')}`, left+3, y+4.8);
+    const levelRecords = records.filter(row =>
+      (row.jenjang_nama_snapshot || 'Jenjang belum diisi') === level
+    );
+    const rooms = [...new Set(levelRecords.map(row => row.kamar_nama_snapshot || 'Kamar belum diisi'))]
+      .sort((a, b) => a.localeCompare(b, 'id'));
+    const levelKg = levelRecords.reduce((sum, row) => sum + Number(row.berat_kg || 0), 0);
+    const levelPieces = levelRecords.reduce((sum, row) => {
+      if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) return sum;
+      return sum + Number(row.jumlah_pakaian || 0);
+    }, 0);
+    const levelMissingPieces = levelRecords.filter(row =>
+      row.jumlah_pakaian === null || row.jumlah_pakaian === undefined
+    ).length;
+    const levelKnownPieceRecords = levelRecords.length - levelMissingPieces;
+    const levelPiecesLabel = levelKnownPieceRecords > 0
+      ? `${fmtInt.format(levelPieces)} potong${levelMissingPieces ? '*' : ''}`
+      : '—';
+
+    if (y + 16 > pageHeight - 16) y = addContinuationPage();
+
+    // Bar jenjang dibuat kontras agar hierarki laporan mudah dipindai.
+    doc.setFillColor(20, 63, 120);
+    doc.roundedRect(left, y, contentWidth, 7, 1.5, 1.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.2);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`JENJANG: ${safePdfText(level).toLocaleUpperCase('id-ID')}`, left + 3, y + 4.8);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(231, 240, 252);
+    doc.text(`${rooms.length} kamar · ${fmtInt.format(levelRecords.length)} catatan`, pageWidth - right - 3, y + 4.7, { align: 'right' });
     y += 10;
-    const levelRecords = records.filter(row => (row.jenjang_nama_snapshot || 'Jenjang belum diisi') === level);
-    const rooms = [...new Set(levelRecords.map(row => row.kamar_nama_snapshot || 'Kamar belum diisi'))].sort((a,b)=>a.localeCompare(b,'id'));
-    let levelKg = 0, levelPieces = 0;
+
     for (const room of rooms) {
-      const roomRecords = levelRecords.filter(row => (row.kamar_nama_snapshot || 'Kamar belum diisi') === room);
-      if (y > 178) { doc.addPage('a4','landscape'); y = 15; }
-      doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(31,41,55);
-      doc.text(`KAMAR: ${safePdfText(room)}`, left+1, y+2.5);
-      y += 4;
+      const roomRecords = levelRecords.filter(row =>
+        (row.kamar_nama_snapshot || 'Kamar belum diisi') === room
+      );
+
       const students = new Map();
       for (const row of roomRecords) {
-        const key = row.santri_id;
-        if (!students.has(key)) students.set(key,{name:row.santri_nama_snapshot || 'Tanpa nama', stages:{}, kg:0, pieces:0, hasPieces:false});
-        const item = students.get(key);
+        const studentKey = row.santri_id || `${row.santri_nama_snapshot || 'Tanpa nama'}|${room}`;
+        if (!students.has(studentKey)) {
+          students.set(studentKey, {
+            name: row.santri_nama_snapshot || 'Tanpa nama',
+            stages: {},
+            kg: 0,
+            pieces: 0,
+            hasPieces: false,
+            missingPieces: 0
+          });
+        }
+        const item = students.get(studentKey);
         const stageNo = stageById.get(row.tahap_id);
-        if (stageNo) item.stages[stageNo] = (item.stages[stageNo] || 0) + Number(row.berat_kg || 0);
+        if (stageNo) {
+          item.stages[stageNo] = (item.stages[stageNo] || 0) + Number(row.berat_kg || 0);
+        }
         item.kg += Number(row.berat_kg || 0);
-        if (row.jumlah_pakaian !== null && row.jumlah_pakaian !== undefined) { item.pieces += Number(row.jumlah_pakaian || 0); item.hasPieces = true; }
+        if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) {
+          item.missingPieces += 1;
+        } else {
+          item.pieces += Number(row.jumlah_pakaian || 0);
+          item.hasPieces = true;
+        }
       }
-      const stageHeads = Array.from({length:8},(_,idx)=>`Tahap ${idx+1}`);
-      const sortedStudents = [...students.values()].sort((a,b)=>a.name.localeCompare(b.name,'id'));
-      const body = sortedStudents.map((student,index) => [String(index+1), student.name, ...Array.from({length:8},(_,idx)=>student.stages[idx+1] ? fmt.format(student.stages[idx+1]) : '—'), fmt.format(student.kg), student.hasPieces ? fmtInt.format(student.pieces) : '—']);
-      const roomKg = roomRecords.reduce((sum,row)=>sum+Number(row.berat_kg||0),0);
-      const roomPiecesKnown = roomRecords.some(row=>row.jumlah_pakaian !== null && row.jumlah_pakaian !== undefined);
-      const roomPieces = roomRecords.reduce((sum,row)=>sum+(row.jumlah_pakaian===null||row.jumlah_pakaian===undefined?0:Number(row.jumlah_pakaian||0)),0);
-      body.push(['','TOTAL KAMAR',...Array.from({length:8},(_,idx)=>fmt.format(roomRecords.filter(row=>stageById.get(row.tahap_id)===idx+1).reduce((sum,row)=>sum+Number(row.berat_kg||0),0))),fmt.format(roomKg),roomPiecesKnown?fmtInt.format(roomPieces):'—']);
-      autoTable(doc, {
-        startY:y+1, head:[['No','Nama santri',...stageHeads,'Total kg','Jml pakaian']], body,
-        theme:'grid', margin:{left,right}, tableWidth:'auto',
-        styles:{font:'helvetica',fontSize:6.7,cellPadding:1.7,overflow:'linebreak',textColor:[45,55,72],valign:'middle'},
-        headStyles:{fillColor:[15,55,105],textColor:[255,255,255],fontStyle:'bold',halign:'center'},
-        alternateRowStyles:{fillColor:[247,250,254]},
-        columnStyles:{0:{cellWidth:8,halign:'center'},1:{cellWidth:49},2:{cellWidth:14},3:{cellWidth:14},4:{cellWidth:14},5:{cellWidth:14},6:{cellWidth:14},7:{cellWidth:14},8:{cellWidth:14},9:{cellWidth:14},10:{cellWidth:17,halign:'right'},11:{cellWidth:17,halign:'right'}},
-        didParseCell:(data)=>{if(data.section==='body' && data.row.index===body.length-1){data.cell.styles.fontStyle='bold';data.cell.styles.fillColor=[229,238,250];}}
+
+      const sortedStudents = [...students.values()].sort((a, b) => a.name.localeCompare(b.name, 'id'));
+      const roomKg = roomRecords.reduce((sum, row) => sum + Number(row.berat_kg || 0), 0);
+      const roomPieces = roomRecords.reduce((sum, row) => {
+        if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) return sum;
+        return sum + Number(row.jumlah_pakaian || 0);
+      }, 0);
+      const roomMissingPieces = roomRecords.filter(row =>
+        row.jumlah_pakaian === null || row.jumlah_pakaian === undefined
+      ).length;
+      const roomPiecesKnown = roomRecords.length > roomMissingPieces;
+
+      // Sisakan ruang agar judul kamar tidak terpisah dari awal tabel.
+      const estimatedStartHeight = 12 + Math.min(sortedStudents.length, 5) * 4.5;
+      if (y + estimatedStartHeight > pageHeight - 16) y = addContinuationPage();
+
+      doc.setFillColor(240, 246, 253);
+      doc.setDrawColor(220, 231, 244);
+      doc.roundedRect(left, y, contentWidth, 6.5, 1.2, 1.2, 'FD');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.8);
+      doc.setTextColor(17, 48, 88);
+      doc.text(`KAMAR: ${safePdfText(room)}`, left + 3, y + 4.4, { maxWidth: 190 });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6.2);
+      doc.setTextColor(91, 108, 129);
+      doc.text(`${fmtInt.format(sortedStudents.length)} santri · ${fmtInt.format(roomRecords.length)} catatan`, pageWidth - right - 3, y + 4.3, { align: 'right' });
+      y += 7.5;
+
+      const stageHeads = Array.from({ length: 8 }, (_, index) => {
+        const stage = stageByNumber.get(index + 1);
+        const date = stage?.tanggal_laundry ? shortDate(stage.tanggal_laundry) : '—';
+        return `Tahap ${index + 1}\n${date}`;
       });
-      y = (doc.lastAutoTable?.finalY || y+20) + 5;
-      levelKg += roomKg; levelPieces += roomPieces;
-      if (y > 184 && room !== rooms[rooms.length-1]) { doc.addPage('a4','landscape'); y = 15; }
+
+      const body = sortedStudents.map((student, index) => [
+        String(index + 1),
+        student.name,
+        ...Array.from({ length: 8 }, (_, stageIndex) => {
+          const value = student.stages[stageIndex + 1];
+          return value ? fmt.format(value) : '—';
+        }),
+        fmt.format(student.kg),
+        student.hasPieces
+          ? `${fmtInt.format(student.pieces)}${student.missingPieces ? '*' : ''}`
+          : '—'
+      ]);
+
+      const roomStageTotals = Array.from({ length: 8 }, (_, stageIndex) => {
+        const stageNo = stageIndex + 1;
+        const sum = roomRecords
+          .filter(row => stageById.get(row.tahap_id) === stageNo)
+          .reduce((total, row) => total + Number(row.berat_kg || 0), 0);
+        return fmt.format(sum);
+      });
+
+      body.push([
+        '',
+        'TOTAL KAMAR',
+        ...roomStageTotals,
+        fmt.format(roomKg),
+        roomPiecesKnown ? `${fmtInt.format(roomPieces)}${roomMissingPieces ? '*' : ''}` : '—'
+      ]);
+
+      autoTable(doc, {
+        startY: y,
+        head: [['No', 'Nama santri', ...stageHeads, 'Total kg', 'Jumlah\n(potong)']],
+        body,
+        theme: 'grid',
+        margin: { left, right, top: 29, bottom: 15 },
+        tableWidth: 'auto',
+        showHead: 'everyPage',
+        rowPageBreak: 'avoid',
+        styles: {
+          font: 'helvetica',
+          fontSize: 6.4,
+          cellPadding: 1.45,
+          overflow: 'linebreak',
+          textColor: [45, 55, 72],
+          valign: 'middle',
+          lineColor: [222, 230, 240],
+          lineWidth: 0.15
+        },
+        headStyles: {
+          fillColor: [8, 43, 89],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          halign: 'center',
+          fontSize: 6.1,
+          minCellHeight: 8
+        },
+        alternateRowStyles: { fillColor: [248, 250, 253] },
+        columnStyles: {
+          0: { cellWidth: 9, halign: 'center' },
+          1: { cellWidth: 62, halign: 'left' },
+          2: { cellWidth: 19, halign: 'center' },
+          3: { cellWidth: 19, halign: 'center' },
+          4: { cellWidth: 19, halign: 'center' },
+          5: { cellWidth: 19, halign: 'center' },
+          6: { cellWidth: 19, halign: 'center' },
+          7: { cellWidth: 19, halign: 'center' },
+          8: { cellWidth: 19, halign: 'center' },
+          9: { cellWidth: 19, halign: 'center' },
+          10: { cellWidth: 22, halign: 'right' },
+          11: { cellWidth: 25, halign: 'right' }
+        },
+        didParseCell: data => {
+          if (data.section === 'body' && data.row.index === body.length - 1) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = [229, 238, 249];
+            data.cell.styles.textColor = [8, 43, 89];
+          }
+        },
+        didDrawPage: data => {
+          const pageNo = doc.internal.getCurrentPageInfo().pageNumber;
+          if (pageNo > 1 && !headerPages.has(pageNo)) drawContinuationHeader();
+          if (pageNo > 1 && Number(data.pageNumber || 1) > 1) {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(5.8);
+            doc.setTextColor(112, 127, 146);
+            doc.text(
+              `LANJUTAN · JENJANG ${safePdfText(level).toLocaleUpperCase('id-ID')} · KAMAR ${safePdfText(room)}`,
+              left,
+              27,
+              { maxWidth: contentWidth }
+            );
+          }
+        }
+      });
+
+      y = (doc.lastAutoTable?.finalY || y + 20) + 5;
     }
-    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(15,39,77);
-    doc.text(`TOTAL JENJANG ${safePdfText(level)}: ${fmt.format(levelKg)} kg  |  ${fmtInt.format(levelPieces)} pakaian tercatat`, left+1, Math.min(y+1,195));
-    y = Math.min(y+8,198);
+
+    if (y + 9 > pageHeight - 14) y = addContinuationPage();
+    doc.setFillColor(248, 250, 253);
+    doc.setDrawColor(222, 231, 242);
+    doc.roundedRect(left, y, contentWidth, 7, 1.2, 1.2, 'FD');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.2);
+    doc.setTextColor(8, 43, 89);
+    doc.text(`SUBTOTAL JENJANG ${safePdfText(level).toLocaleUpperCase('id-ID')}`, left + 3, y + 4.7);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.text(
+      `${fmt.format(levelKg)} kg  ·  ${levelPiecesLabel}`,
+      pageWidth - right - 3,
+      y + 4.7,
+      { align: 'right' }
+    );
+    y += 10;
   }
 
   const pageCount = doc.getNumberOfPages();
-  for (let page=1; page<=pageCount; page++) {
+  for (let page = 1; page <= pageCount; page++) {
     doc.setPage(page);
-    doc.setDrawColor(203,213,225); doc.setLineWidth(.25); doc.line(10,pageHeight-9,287,pageHeight-9);
-    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(100,116,139);
-    doc.text(`SILAS · ${periodLabel(period)}`,10,pageHeight-4);
-    doc.text(`Halaman ${page} dari ${pageCount}`,287,pageHeight-4,{align:'right'});
-  }
-  doc.save(`SILAS-Laporan-${Number(period.nomor_periode)}.pdf`);
-}
+    doc.setDrawColor(203, 215, 229);
+    doc.setLineWidth(0.25);
+    doc.line(left, pageHeight - 9, pageWidth - right, pageHeight - 9);
 
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.4);
+    doc.setTextColor(100, 116, 139);
+    doc.text(
+      `SILAS · ${periodLabel(period)} · Dicetak ${generatedAt}`,
+      left,
+      pageHeight - 4
+    );
+    doc.text(`Halaman ${page} dari ${pageCount}`, pageWidth - right, pageHeight - 4, {
+      align: 'right'
+    });
+  }
+
+  doc.save(`SILAS-Rekap-Laundry-Periode-${periodNumber}.pdf`);
+}
 async function imageUrlToDataUrl(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error('Gagal memuat gambar.');
