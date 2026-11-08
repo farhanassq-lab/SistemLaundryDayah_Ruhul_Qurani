@@ -1691,34 +1691,22 @@ async function createMonthlyPdf(period, stages, records) {
 
   const stageById = new Map(stages.map(stage => [stage.id, Number(stage.nomor_tahap)]));
   const stageByNumber = new Map(stages.map(stage => [Number(stage.nomor_tahap), stage]));
+  const generatedAt = new Date().toLocaleString('id-ID', {
+    day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
+
   const totalKg = records.reduce((sum, row) => sum + Number(row.berat_kg || 0), 0);
   const totalPieces = records.reduce((sum, row) => {
     if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) return sum;
     return sum + Number(row.jumlah_pakaian || 0);
   }, 0);
   const uniqueStudents = new Set(records.map(row => row.santri_id).filter(Boolean)).size;
-  const missingPieceRecords = records.filter(row =>
-    row.jumlah_pakaian === null || row.jumlah_pakaian === undefined
-  ).length;
+  const missingPieceRecords = records.filter(row => row.jumlah_pakaian === null || row.jumlah_pakaian === undefined).length;
   const knownPieceRecords = records.length - missingPieceRecords;
-  const totalPiecesLabel = records.length === 0
-    ? '0'
-    : knownPieceRecords > 0
-      ? `${fmtInt.format(totalPieces)}${missingPieceRecords ? '*' : ''}`
-      : '—';
+  const totalPiecesLabel = records.length === 0 ? '0' : knownPieceRecords > 0 ? `${fmtInt.format(totalPieces)}${missingPieceRecords ? '*' : ''}` : '—';
 
-  const generatedAt = new Date().toLocaleString('id-ID', {
-    day: '2-digit', month: 'long', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  });
-
-  const stageDates = stages
-    .map(stage => stage.tanggal_laundry)
-    .filter(Boolean)
-    .sort();
-  const dateRange = stageDates.length
-    ? `${shortDate(stageDates[0])} – ${shortDate(stageDates[stageDates.length - 1])}`
-    : 'Tanggal tahap belum tersedia';
+  const stageDates = stages.map(stage => stage.tanggal_laundry).filter(Boolean).sort();
+  const dateRange = stageDates.length ? `${shortDate(stageDates[0])} – ${shortDate(stageDates[stageDates.length - 1])}` : 'Tanggal tahap belum tersedia';
 
   doc.setProperties({
     title: `${reportTitle} - Periode ${periodNumber}`,
@@ -1727,434 +1715,318 @@ async function createMonthlyPdf(period, stages, records) {
     creator: 'SILAS - Sistem Informasi Laundry Santri'
   });
 
-  // Header ringkas akan digunakan pada semua halaman lanjutan.
-  const headerPages = new Set([1]);
+  function drawFormalLetterhead(pageReportTitle) {
+    addPdfLogo(doc, laundryLogo, 12, 8, 20, 20, 'LOGO\nLAUNDRY');
+    addPdfLogo(doc, dayahLogo, 265, 8, 20, 20, 'LOGO\nDAYAH');
 
-  function drawContinuationHeader() {
-    const pageNo = doc.internal.getCurrentPageInfo().pageNumber;
-    if (headerPages.has(pageNo)) return;
-
-    doc.setFillColor(8, 43, 89);
-    doc.rect(0, 0, pageWidth, 23, 'F');
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(25, 25, 25);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.text(dayahName, left, 8.5, { maxWidth: 175 });
+    doc.setFontSize(12.5);
+    doc.text(dayahName, pageWidth / 2, 12, { align: 'center', maxWidth: 205 });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.6);
+    doc.text(pageReportTitle || reportTitle, pageWidth / 2, 18, { align: 'center', maxWidth: 205 });
+
+    let infoY = 22;
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    doc.text(reportTitle, left, 14.5, { maxWidth: 175 });
-    doc.setTextColor(255, 226, 160);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
-    doc.text(`PERIODE ${periodNumber} · ${dateRange}`, pageWidth - right, 14.5, {
-      align: 'right',
-      maxWidth: 95
-    });
-    doc.setDrawColor(197, 139, 34);
-    doc.setLineWidth(0.55);
-    doc.line(left, 23, pageWidth - right, 23);
-    headerPages.add(pageNo);
-  }
-
-  function addContinuationPage() {
-    doc.addPage('a4', 'landscape');
-    drawContinuationHeader();
-    return 29;
-  }
-
-  function drawMetricCard(x, y, width, label, value, note) {
-    doc.setFillColor(248, 250, 253);
-    doc.setDrawColor(222, 231, 242);
-    doc.setLineWidth(0.25);
-    doc.roundedRect(x, y, width, 18, 2, 2, 'FD');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(5.9);
-    doc.setTextColor(91, 108, 129);
-    doc.text(label.toLocaleUpperCase('id-ID'), x + 3, y + 4.2, { maxWidth: width - 6 });
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
-    doc.setTextColor(8, 43, 89);
-    doc.text(String(value), x + 3, y + 11.7, { maxWidth: width - 6 });
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(5.8);
-    doc.setTextColor(112, 127, 146);
-    doc.text(note, x + 3, y + 15.8, { maxWidth: width - 6 });
-  }
-
-  // Kop surat halaman pertama.
-  addPdfLogo(doc, laundryLogo, 10, 6, 23, 23, 'LOGO\nLAUNDRY');
-  addPdfLogo(doc, dayahLogo, 264, 6, 23, 23, 'LOGO\nDAYAH');
-
-  doc.setTextColor(8, 43, 89);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12.5);
-  doc.text(dayahName, pageWidth / 2, 11, { align: 'center', maxWidth: 218 });
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9.5);
-  doc.text(reportTitle, pageWidth / 2, 17, { align: 'center', maxWidth: 218 });
-
-  let headerTextY = 21;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6.8);
-  doc.setTextColor(83, 101, 124);
-
-  if (address) {
-    const addressLines = doc.splitTextToSize(address, 214);
-    const visibleAddressLines = addressLines.slice(0, 3);
-    doc.text(visibleAddressLines, pageWidth / 2, headerTextY, {
-      align: 'center',
-      lineHeightFactor: 1.05
-    });
-    headerTextY += visibleAddressLines.length * 2.8;
-    if (addressLines.length > 3) {
-      doc.setFontSize(5.8);
-      doc.text('Alamat dipersingkat pada kop surat.', pageWidth / 2, headerTextY, { align: 'center' });
-      headerTextY += 2.6;
-      doc.setFontSize(6.8);
+    doc.setFontSize(6.9);
+    doc.setTextColor(75, 75, 75);
+    if (address) {
+      const addressLines = doc.splitTextToSize(address, 200).slice(0, 3);
+      doc.text(addressLines, pageWidth / 2, infoY, { align: 'center', lineHeightFactor: 1.05 });
+      infoY += addressLines.length * 2.8;
     }
+    if (contact) {
+      doc.text(contact, pageWidth / 2, infoY + 0.2, { align: 'center', maxWidth: 200 });
+      infoY += 3;
+    }
+
+    const ruleY = Math.max(32, infoY + 1.2);
+    doc.setDrawColor(60, 60, 60);
+    doc.setLineWidth(0.5);
+    doc.line(left, ruleY, pageWidth - right, ruleY);
+    doc.setDrawColor(140, 140, 140);
+    doc.setLineWidth(0.2);
+    doc.line(left, ruleY + 1.2, pageWidth - right, ruleY + 1.2);
+    return ruleY + 4;
   }
 
-  if (contact) {
-    doc.text(contact, pageWidth / 2, headerTextY + 0.5, { align: 'center', maxWidth: 214 });
-    headerTextY += 3.2;
+  function drawPeriodSummary(startY) {
+    doc.setDrawColor(120, 120, 120);
+    doc.setLineWidth(0.2);
+    doc.rect(left, startY, contentWidth, 18);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.6);
+    doc.setTextColor(35, 35, 35);
+    doc.text(`PERIODE ${periodNumber}`, left + 3, startY + 5);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.4);
+    doc.text(`Rentang tahap : ${dateRange}`, left + 3, startY + 10);
+    doc.text(`Santri tercatat : ${fmtInt.format(uniqueStudents)}`, left + 72, startY + 10);
+    doc.text(`Total berat : ${fmt.format(totalKg)} kg`, left + 132, startY + 10);
+    doc.text(`Total pakaian : ${totalPiecesLabel} potong`, left + 192, startY + 10);
+    doc.text(`Dicetak : ${generatedAt}`, left + 3, startY + 15);
+    if (missingPieceRecords) {
+      doc.text(`Catatan: tanda * berarti sebagian jumlah pakaian pada data lama belum tercatat.`, pageWidth - right - 3, startY + 15, { align: 'right', maxWidth: 145 });
+    }
+    return startY + 22;
   }
 
-  const ruleY = Math.max(33, headerTextY + 2);
-  doc.setDrawColor(8, 43, 89);
-  doc.setLineWidth(0.8);
-  doc.line(left, ruleY, pageWidth - right, ruleY);
-  doc.setDrawColor(197, 139, 34);
-  doc.setLineWidth(0.35);
-  doc.line(left, ruleY + 1.5, pageWidth - right, ruleY + 1.5);
+  function drawRoomIdentity(startY, level, room) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.8);
+    doc.setTextColor(35, 35, 35);
+    doc.text('INFORMASI LAPORAN', left, startY);
 
-  const periodY = ruleY + 5;
-  doc.setFillColor(8, 43, 89);
-  doc.roundedRect(left, periodY, contentWidth, 8, 1.8, 1.8, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.text(`REKAPITULASI PERIODE ${periodNumber}`, left + 4, periodY + 5.2);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  doc.setTextColor(255, 226, 160);
-  doc.text(`Rentang tanggal: ${dateRange}`, pageWidth - right - 4, periodY + 5.2, { align: 'right' });
+    const boxY = startY + 2.5;
+    doc.setDrawColor(110, 110, 110);
+    doc.setLineWidth(0.2);
+    doc.rect(left, boxY, contentWidth, 13.5);
+    // vertical dividers
+    const x1 = left + 58;
+    const x2 = left + 130;
+    const x3 = left + 208;
+    doc.line(x1, boxY, x1, boxY + 13.5);
+    doc.line(x2, boxY, x2, boxY + 13.5);
+    doc.line(x3, boxY, x3, boxY + 13.5);
 
-  const cardY = periodY + 11;
-  const cardGap = 4;
-  const cardWidth = (contentWidth - cardGap * 3) / 4;
-  drawMetricCard(left, cardY, cardWidth, 'Santri tercatat', fmtInt.format(uniqueStudents), 'Santri unik pada periode ini');
-  drawMetricCard(left + cardWidth + cardGap, cardY, cardWidth, 'Total berat', `${fmt.format(totalKg)} kg`, 'Akumulasi seluruh tahap');
-  drawMetricCard(left + (cardWidth + cardGap) * 2, cardY, cardWidth, 'Jumlah pakaian', totalPiecesLabel, 'Potong yang berhasil tercatat');
-  drawMetricCard(left + (cardWidth + cardGap) * 3, cardY, cardWidth, 'Catatan laundry', fmtInt.format(records.length), 'Jumlah transaksi tersimpan');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.2);
+    doc.setTextColor(70, 70, 70);
+    doc.text('Periode', left + 3, boxY + 4.1);
+    doc.text('Jenjang', x1 + 3, boxY + 4.1);
+    doc.text('Kamar', x2 + 3, boxY + 4.1);
+    doc.text('Tanggal Cetak', x3 + 3, boxY + 4.1);
 
-  const noteY = cardY + 22;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6.1);
-  doc.setTextColor(92, 107, 126);
-  if (missingPieceRecords) {
-    doc.text(
-      `* Ada ${fmtInt.format(missingPieceRecords)} catatan lama tanpa jumlah pakaian. Sel yang bertanda * belum memiliki data jumlah pakaian lengkap.`,
-      left,
-      noteY,
-      { maxWidth: contentWidth }
-    );
-  } else {
-    doc.text(
-      'Setiap tahap menampilkan berat (kg) dan jumlah pakaian (potong). Satu kamar dimulai pada halaman tersendiri.',
-      left,
-      noteY,
-      { maxWidth: contentWidth }
-    );
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.2);
+    doc.setTextColor(25, 25, 25);
+    doc.text(`Periode ${periodNumber}`, left + 3, boxY + 9.5, { maxWidth: 50 });
+    doc.text(safePdfText(level), x1 + 3, boxY + 9.5, { maxWidth: 64 });
+    doc.text(safePdfText(room), x2 + 3, boxY + 9.5, { maxWidth: 70 });
+    doc.text(generatedAt, x3 + 3, boxY + 9.5, { maxWidth: 63 });
+
+    return boxY + 18;
   }
 
-  let y = noteY + 5.5;
-  const levels = [...new Set(records.map(row => row.jenjang_nama_snapshot || 'Jenjang belum diisi'))]
-    .sort((a, b) => a.localeCompare(b, 'id'));
+  function addRoomStartPage(level, room) {
+    doc.addPage('a4', 'landscape');
+    const headerStart = drawFormalLetterhead(reportTitle);
+    return drawRoomIdentity(headerStart + 2, level, room);
+  }
+
+  function drawRoomContinuationHeader(level, room) {
+    const headerStart = drawFormalLetterhead(`${reportTitle} (LANJUTAN)`);
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(6.3);
+    doc.setTextColor(70, 70, 70);
+    doc.text(`Lanjutan jenjang ${safePdfText(level)} · kamar ${safePdfText(room)}`, left, headerStart + 2.5, { maxWidth: contentWidth });
+    return headerStart + 6;
+  }
+
+  function formatPiecesLabel(value, hasPieces, missingCount, mode = 'normal') {
+    if (!hasPieces) return mode === 'compact' ? '—*' : '— *';
+    const base = `${fmtInt.format(value)} potong`;
+    return `${base}${missingCount ? '*' : ''}`;
+  }
+
+  function formatStageCell(stageItem) {
+    if (!stageItem || !stageItem.records) return '—';
+    const piecesText = formatPiecesLabel(stageItem.pieces, stageItem.hasPieces, stageItem.missingPieces, 'compact');
+    return `${fmt.format(stageItem.kg)} kg\n${piecesText}`;
+  }
+
+  const levels = [...new Set(records.map(row => row.jenjang_nama_snapshot || 'Jenjang belum diisi'))].sort((a, b) => a.localeCompare(b, 'id'));
 
   if (!levels.length) {
-    doc.setFillColor(248, 250, 253);
-    doc.setDrawColor(222, 231, 242);
-    doc.roundedRect(left, y + 3, contentWidth, 22, 2, 2, 'FD');
+    const headerStart = drawFormalLetterhead(reportTitle);
+    let y = drawPeriodSummary(headerStart + 1);
+    doc.setDrawColor(120, 120, 120);
+    doc.setLineWidth(0.2);
+    doc.rect(left, y, contentWidth, 20);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.setTextColor(8, 43, 89);
-    doc.text('Belum ada catatan laundry pada periode ini.', left + 5, y + 12);
+    doc.setFontSize(9);
+    doc.setTextColor(30, 30, 30);
+    doc.text('Belum ada catatan laundry pada periode ini.', left + 4, y + 8);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
-    doc.setTextColor(100, 116, 139);
-    doc.text('Laporan tetap dibuat agar periode dapat didokumentasikan.', left + 5, y + 18);
-  }
+    doc.setTextColor(80, 80, 80);
+    doc.text('Laporan tetap dibuat sebagai dokumentasi periode.', left + 4, y + 14);
+  } else {
+    let roomSequence = 0;
+    for (const level of levels) {
+      const levelRecords = records.filter(row => (row.jenjang_nama_snapshot || 'Jenjang belum diisi') === level);
+      const rooms = [...new Set(levelRecords.map(row => row.kamar_nama_snapshot || 'Kamar belum diisi'))].sort((a, b) => a.localeCompare(b, 'id'));
 
-  let firstRoom = true;
-
-  for (const level of levels) {
-    const levelRecords = records.filter(row =>
-      (row.jenjang_nama_snapshot || 'Jenjang belum diisi') === level
-    );
-    const rooms = [...new Set(levelRecords.map(row => row.kamar_nama_snapshot || 'Kamar belum diisi'))]
-      .sort((a, b) => a.localeCompare(b, 'id'));
-
-    for (const room of rooms) {
-      // Satu kamar selalu memulai halaman baru. Halaman tambahan hanya
-      // digunakan untuk melanjutkan tabel kamar yang sama bila santri banyak.
-      if (!firstRoom) {
-        y = addContinuationPage();
-      } else if (y + 43 > pageHeight - 14) {
-        y = addContinuationPage();
-      }
-      firstRoom = false;
-
-      const roomRecords = levelRecords.filter(row =>
-        (row.kamar_nama_snapshot || 'Kamar belum diisi') === room
-      );
-
-      const students = new Map();
-      for (const row of roomRecords) {
-        const studentKey = row.santri_id || `${row.santri_nama_snapshot || 'Tanpa nama'}|${room}`;
-        if (!students.has(studentKey)) {
-          students.set(studentKey, {
-            name: row.santri_nama_snapshot || 'Tanpa nama',
-            stages: {},
-            kg: 0,
-            pieces: 0,
-            hasPieces: false,
-            missingPieces: 0
-          });
-        }
-
-        const item = students.get(studentKey);
-        const stageNo = stageById.get(row.tahap_id);
-
-        if (stageNo) {
-          if (!item.stages[stageNo]) {
-            item.stages[stageNo] = {
+      for (const room of rooms) {
+        roomSequence += 1;
+        const roomRecords = levelRecords.filter(row => (row.kamar_nama_snapshot || 'Kamar belum diisi') === room);
+        const students = new Map();
+        for (const row of roomRecords) {
+          const studentKey = row.santri_id || `${row.santri_nama_snapshot || 'Tanpa nama'}|${room}`;
+          if (!students.has(studentKey)) {
+            students.set(studentKey, {
+              name: row.santri_nama_snapshot || 'Tanpa nama',
+              stages: {},
               kg: 0,
               pieces: 0,
               hasPieces: false,
-              missingPieces: 0,
-              records: 0
-            };
+              missingPieces: 0
+            });
           }
-          const stageItem = item.stages[stageNo];
-          stageItem.kg += Number(row.berat_kg || 0);
-          stageItem.records += 1;
-
+          const item = students.get(studentKey);
+          const stageNo = stageById.get(row.tahap_id);
+          if (stageNo) {
+            if (!item.stages[stageNo]) {
+              item.stages[stageNo] = { kg: 0, pieces: 0, hasPieces: false, missingPieces: 0, records: 0 };
+            }
+            const stageItem = item.stages[stageNo];
+            stageItem.kg += Number(row.berat_kg || 0);
+            stageItem.records += 1;
+            if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) {
+              stageItem.missingPieces += 1;
+            } else {
+              stageItem.pieces += Number(row.jumlah_pakaian || 0);
+              stageItem.hasPieces = true;
+            }
+          }
+          item.kg += Number(row.berat_kg || 0);
           if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) {
-            stageItem.missingPieces += 1;
+            item.missingPieces += 1;
           } else {
-            stageItem.pieces += Number(row.jumlah_pakaian || 0);
-            stageItem.hasPieces = true;
+            item.pieces += Number(row.jumlah_pakaian || 0);
+            item.hasPieces = true;
           }
         }
 
-        item.kg += Number(row.berat_kg || 0);
-        if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) {
-          item.missingPieces += 1;
-        } else {
-          item.pieces += Number(row.jumlah_pakaian || 0);
-          item.hasPieces = true;
-        }
-      }
-
-      const sortedStudents = [...students.values()].sort((a, b) => a.name.localeCompare(b.name, 'id'));
-
-      function formatStageCell(stageItem) {
-        if (!stageItem || !stageItem.records) return '—';
-        const piecesText = stageItem.hasPieces
-          ? `${fmtInt.format(stageItem.pieces)} potong${stageItem.missingPieces ? '*' : ''}`
-          : '—*';
-        return `${fmt.format(stageItem.kg)} kg\n${piecesText}`;
-      }
-
-      function formatTotalPieces(pieces, hasPieces, missingCount) {
-        if (!hasPieces) return '—*';
-        return `${fmtInt.format(pieces)} potong${missingCount ? '*' : ''}`;
-      }
-
-      const body = sortedStudents.map((student, index) => [
-        String(index + 1),
-        student.name,
-        ...Array.from({ length: 8 }, (_, stageIndex) => formatStageCell(student.stages[stageIndex + 1])),
-        `${fmt.format(student.kg)} kg`,
-        formatTotalPieces(student.pieces, student.hasPieces, student.missingPieces)
-      ]);
-
-      const roomKg = roomRecords.reduce((sum, row) => sum + Number(row.berat_kg || 0), 0);
-      const roomPieces = roomRecords.reduce((sum, row) => {
-        if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) return sum;
-        return sum + Number(row.jumlah_pakaian || 0);
-      }, 0);
-      const roomMissingPieces = roomRecords.filter(row =>
-        row.jumlah_pakaian === null || row.jumlah_pakaian === undefined
-      ).length;
-      const roomHasPieces = roomRecords.length > roomMissingPieces;
-
-      const roomStageTotals = Array.from({ length: 8 }, (_, stageIndex) => {
-        const stageNo = stageIndex + 1;
-        const stageRows = roomRecords.filter(row => stageById.get(row.tahap_id) === stageNo);
-        if (!stageRows.length) return '—';
-
-        const stageKg = stageRows.reduce((sum, row) => sum + Number(row.berat_kg || 0), 0);
-        const missing = stageRows.filter(row =>
-          row.jumlah_pakaian === null || row.jumlah_pakaian === undefined
-        ).length;
-        const known = stageRows.length - missing;
-        const stagePieces = stageRows.reduce((sum, row) => {
+        const sortedStudents = [...students.values()].sort((a, b) => a.name.localeCompare(b.name, 'id'));
+        const roomKg = roomRecords.reduce((sum, row) => sum + Number(row.berat_kg || 0), 0);
+        const roomPieces = roomRecords.reduce((sum, row) => {
           if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) return sum;
           return sum + Number(row.jumlah_pakaian || 0);
         }, 0);
-        const piecesText = known > 0
-          ? `${fmtInt.format(stagePieces)} potong${missing ? '*' : ''}`
-          : '—*';
-        return `${fmt.format(stageKg)} kg\n${piecesText}`;
-      });
+        const roomMissingPieces = roomRecords.filter(row => row.jumlah_pakaian === null || row.jumlah_pakaian === undefined).length;
+        const roomHasPieces = roomRecords.length > roomMissingPieces;
 
-      body.push([
-        '',
-        'TOTAL KAMAR',
-        ...roomStageTotals,
-        `${fmt.format(roomKg)} kg`,
-        formatTotalPieces(roomPieces, roomHasPieces, roomMissingPieces)
-      ]);
+        const roomStageTotals = Array.from({ length: 8 }, (_, stageIndex) => {
+          const stageNo = stageIndex + 1;
+          const stageRows = roomRecords.filter(row => stageById.get(row.tahap_id) === stageNo);
+          if (!stageRows.length) return '—';
+          const stageKg = stageRows.reduce((sum, row) => sum + Number(row.berat_kg || 0), 0);
+          const stageMissing = stageRows.filter(row => row.jumlah_pakaian === null || row.jumlah_pakaian === undefined).length;
+          const stageKnown = stageRows.length - stageMissing;
+          const stagePieces = stageRows.reduce((sum, row) => {
+            if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) return sum;
+            return sum + Number(row.jumlah_pakaian || 0);
+          }, 0);
+          return `${fmt.format(stageKg)} kg\n${stageKnown > 0 ? `${fmtInt.format(stagePieces)} potong${stageMissing ? '*' : ''}` : '—*'}`;
+        });
 
-      // Identitas jenjang dan kamar selalu berada di awal halaman kamar.
-      doc.setFillColor(20, 63, 120);
-      doc.roundedRect(left, y, contentWidth, 7, 1.5, 1.5, 'F');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      doc.setTextColor(255, 255, 255);
-      doc.text(`JENJANG: ${safePdfText(level).toLocaleUpperCase('id-ID')}`, left + 3, y + 4.8);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(6.3);
-      doc.setTextColor(231, 240, 252);
-      doc.text(`${fmtInt.format(rooms.length)} kamar pada jenjang ini`, pageWidth - right - 3, y + 4.7, { align: 'right' });
-      y += 9;
+        const body = sortedStudents.map((student, index) => [
+          String(index + 1),
+          student.name,
+          ...Array.from({ length: 8 }, (_, stageIndex) => formatStageCell(student.stages[stageIndex + 1])),
+          `${fmt.format(student.kg)} kg`,
+          formatPiecesLabel(student.pieces, student.hasPieces, student.missingPieces, 'compact')
+        ]);
 
-      doc.setFillColor(240, 246, 253);
-      doc.setDrawColor(220, 231, 244);
-      doc.roundedRect(left, y, contentWidth, 8, 1.2, 1.2, 'FD');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.2);
-      doc.setTextColor(17, 48, 88);
-      doc.text(`KAMAR: ${safePdfText(room).toLocaleUpperCase('id-ID')}`, left + 3, y + 5.1, { maxWidth: 190 });
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(6.3);
-      doc.setTextColor(91, 108, 129);
-      doc.text(`${fmtInt.format(sortedStudents.length)} santri · ${fmtInt.format(roomRecords.length)} catatan`, pageWidth - right - 3, y + 5.1, { align: 'right' });
-      y += 10;
+        body.push([
+          '',
+          'TOTAL KAMAR',
+          ...roomStageTotals,
+          `${fmt.format(roomKg)} kg`,
+          formatPiecesLabel(roomPieces, roomHasPieces, roomMissingPieces, 'compact')
+        ]);
 
-      const stageHeads = Array.from({ length: 8 }, (_, index) => {
-        const stage = stageByNumber.get(index + 1);
-        const date = stage?.tanggal_laundry ? shortDate(stage.tanggal_laundry) : '—';
-        return `TAHAP ${index + 1}\n${date}`;
-      });
-
-      autoTable(doc, {
-        startY: y,
-        head: [[
-          'No',
-          'Nama santri',
-          ...stageHeads,
-          'TOTAL\nBERAT',
-          'TOTAL\nPAKAIAN'
-        ]],
-        body,
-        theme: 'grid',
-        margin: { left, right, top: 29, bottom: 15 },
-        tableWidth: 'auto',
-        showHead: 'everyPage',
-        rowPageBreak: 'avoid',
-        styles: {
-          font: 'helvetica',
-          fontSize: 5.8,
-          cellPadding: 1.25,
-          overflow: 'linebreak',
-          textColor: [45, 55, 72],
-          valign: 'middle',
-          lineColor: [222, 230, 240],
-          lineWidth: 0.15,
-          minCellHeight: 9
-        },
-        headStyles: {
-          fillColor: [8, 43, 89],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          halign: 'center',
-          fontSize: 5.7,
-          minCellHeight: 9
-        },
-        alternateRowStyles: { fillColor: [248, 250, 253] },
-        columnStyles: {
-          0: { cellWidth: 7, halign: 'center' },
-          1: { cellWidth: 42, halign: 'left' },
-          2: { cellWidth: 22.5, halign: 'center' },
-          3: { cellWidth: 22.5, halign: 'center' },
-          4: { cellWidth: 22.5, halign: 'center' },
-          5: { cellWidth: 22.5, halign: 'center' },
-          6: { cellWidth: 22.5, halign: 'center' },
-          7: { cellWidth: 22.5, halign: 'center' },
-          8: { cellWidth: 22.5, halign: 'center' },
-          9: { cellWidth: 22.5, halign: 'center' },
-          10: { cellWidth: 24, halign: 'center' },
-          11: { cellWidth: 24, halign: 'center' }
-        },
-        didParseCell: data => {
-          if (data.section === 'body' && data.row.index === body.length - 1) {
-            data.cell.styles.fontStyle = 'bold';
-            data.cell.styles.fillColor = [229, 238, 249];
-            data.cell.styles.textColor = [8, 43, 89];
-            data.cell.styles.minCellHeight = 10;
-          }
-          if (data.section === 'body' && data.column.index >= 2 && data.column.index <= 9) {
-            data.cell.styles.halign = 'center';
-          }
-        },
-        didDrawPage: data => {
-          const pageNo = doc.internal.getCurrentPageInfo().pageNumber;
-          if (pageNo > 1 && !headerPages.has(pageNo)) drawContinuationHeader();
-
-          // Halaman lanjutan dari kamar yang sama diberi penanda yang jelas.
-          if (pageNo > 1 && Number(data.pageNumber || 1) > 1) {
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(5.8);
-            doc.setTextColor(112, 127, 146);
-            doc.text(
-              `LANJUTAN KAMAR ${safePdfText(room).toLocaleUpperCase('id-ID')} · JENJANG ${safePdfText(level).toLocaleUpperCase('id-ID')}`,
-              left,
-              27,
-              { maxWidth: contentWidth }
-            );
-          }
+        let startY;
+        if (roomSequence === 1) {
+          const firstHeader = drawFormalLetterhead(reportTitle);
+          startY = drawPeriodSummary(firstHeader + 1);
+          startY = drawRoomIdentity(startY + 1.5, level, room);
+        } else {
+          startY = addRoomStartPage(level, room);
         }
-      });
 
-      // Setelah satu kamar selesai, loop akan membuka halaman baru untuk kamar berikutnya.
-      y = (doc.lastAutoTable?.finalY || y + 20) + 4;
+        const stageHeads = Array.from({ length: 8 }, (_, index) => {
+          const stage = stageByNumber.get(index + 1);
+          const date = stage?.tanggal_laundry ? shortDate(stage.tanggal_laundry) : '—';
+          return `Tahap ${index + 1}\n${date}`;
+        });
+
+        autoTable(doc, {
+          startY,
+          head: [['No', 'Nama santri', ...stageHeads, 'Total\nBerat', 'Total\nPakaian']],
+          body,
+          theme: 'grid',
+          margin: { left, right, top: 20, bottom: 15 },
+          showHead: 'everyPage',
+          rowPageBreak: 'avoid',
+          styles: {
+            font: 'helvetica',
+            fontSize: 5.6,
+            cellPadding: 1.15,
+            overflow: 'linebreak',
+            textColor: [35, 35, 35],
+            lineColor: [145, 145, 145],
+            lineWidth: 0.12,
+            valign: 'middle',
+            minCellHeight: 9.2
+          },
+          headStyles: {
+            fillColor: [245, 245, 245],
+            textColor: [20, 20, 20],
+            lineColor: [125, 125, 125],
+            lineWidth: 0.15,
+            fontStyle: 'bold',
+            halign: 'center',
+            fontSize: 5.6,
+            minCellHeight: 9.3
+          },
+          columnStyles: {
+            0: { cellWidth: 7, halign: 'center' },
+            1: { cellWidth: 42, halign: 'left' },
+            2: { cellWidth: 22.5, halign: 'center' },
+            3: { cellWidth: 22.5, halign: 'center' },
+            4: { cellWidth: 22.5, halign: 'center' },
+            5: { cellWidth: 22.5, halign: 'center' },
+            6: { cellWidth: 22.5, halign: 'center' },
+            7: { cellWidth: 22.5, halign: 'center' },
+            8: { cellWidth: 22.5, halign: 'center' },
+            9: { cellWidth: 22.5, halign: 'center' },
+            10: { cellWidth: 23, halign: 'center' },
+            11: { cellWidth: 23, halign: 'center' }
+          },
+          didParseCell: data => {
+            if (data.section === 'body' && data.row.index === body.length - 1) {
+              data.cell.styles.fontStyle = 'bold';
+              data.cell.styles.fillColor = [245, 245, 245];
+              data.cell.styles.textColor = [20, 20, 20];
+            }
+          },
+          didDrawPage: data => {
+            if (Number(data.pageNumber || 1) > 1) {
+              drawRoomContinuationHeader(level, room);
+            }
+          }
+        });
+      }
     }
   }
 
   const pageCount = doc.getNumberOfPages();
   for (let page = 1; page <= pageCount; page++) {
     doc.setPage(page);
-    doc.setDrawColor(203, 215, 229);
-    doc.setLineWidth(0.25);
+    doc.setDrawColor(150, 150, 150);
+    doc.setLineWidth(0.18);
     doc.line(left, pageHeight - 9, pageWidth - right, pageHeight - 9);
-
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.4);
-    doc.setTextColor(100, 116, 139);
-    doc.text(
-      `SILAS · ${periodLabel(period)} · Dicetak ${generatedAt}`,
-      left,
-      pageHeight - 4
-    );
-    doc.text(`Halaman ${page} dari ${pageCount}`, pageWidth - right, pageHeight - 4, {
-      align: 'right'
-    });
+    doc.setFontSize(6.2);
+    doc.setTextColor(85, 85, 85);
+    doc.text(`SILAS · ${periodLabel(period)} · Dicetak ${generatedAt}`, left, pageHeight - 4);
+    doc.text(`Halaman ${page} dari ${pageCount}`, pageWidth - right, pageHeight - 4, { align: 'right' });
   }
 
   doc.save(`SILAS-Rekap-Laundry-Periode-${periodNumber}.pdf`);

@@ -51,3 +51,10 @@ Saat tombol dipilih, sistem meminta konfirmasi dan menjelaskan dampak penghapusa
 - Konfigurasi Supabase.
 - Sistem login dan autentikasi.
 - Data laporan masalah tetap dipertahankan.
+
+
+## Pembaruan V11
+- Setiap kamar sekarang dimulai dengan KOP surat resmi pada halaman tersendiri.
+- Di bawah KOP ditampilkan informasi periode, jenjang, kamar, dan tanggal cetak dengan gaya formal.
+- Warna laporan disederhanakan menjadi formal/minimal.
+- Setiap kolom Tahap 1–8 menampilkan berat dan jumlah pakaian dalam satu sel.
