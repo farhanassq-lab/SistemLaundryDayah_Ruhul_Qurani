@@ -1,0 +1,119 @@
+-- SILAS v13: susun ulang nomor periode setelah periode dihapus.
+-- Jalankan SATU KALI di Supabase Dashboard > SQL Editor.
+--
+-- Contoh: jika Periode 3 dihapus, Periode 4 menjadi Periode 3,
+-- Periode 5 menjadi Periode 4, dan seterusnya.
+-- Seluruh periode yang tersisa akan dinomori ulang secara berurutan mulai dari 1.
+-- ID periode tidak berubah; tahap dan catatan milik periode yang tersisa tetap aman.
+-- Catatan dan tahap pada periode yang dihapus tetap ikut dihapus seperti fungsi lama.
+-- Fungsi SECURITY INVOKER memerlukan izin UPDATE agar nomor periode dapat disusun ulang.
+GRANT UPDATE ON TABLE public.periode_laundry TO authenticated;
+
+-- Izinkan akun SILAS yang sudah terautentikasi memperbarui nomor periode.
+-- Ini diperlukan jika RLS aktif dan tidak mengubah kebijakan tabel lain.
+DROP POLICY IF EXISTS "silas_authenticated_renumber_periode" ON public.periode_laundry;
+CREATE POLICY "silas_authenticated_renumber_periode"
+  ON public.periode_laundry
+  FOR UPDATE
+  TO authenticated
+  USING (TRUE)
+  WITH CHECK (TRUE);
+
+CREATE OR REPLACE FUNCTION public.silas_hapus_periode(p_periode_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $function$
+DECLARE
+  v_nomor_periode integer;
+  v_catatan_dihapus integer := 0;
+  v_tahap_dihapus integer := 0;
+  v_periode_dihapus integer := 0;
+  v_periode_digeser integer := 0;
+  v_offset integer := 0;
+  v_max_nomor integer := 0;
+BEGIN
+  -- Cegah dua proses perubahan periode berjalan bersamaan.
+  LOCK TABLE public.periode_laundry IN SHARE ROW EXCLUSIVE MODE;
+
+  SELECT nomor_periode
+    INTO v_nomor_periode
+  FROM public.periode_laundry
+  WHERE id = p_periode_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Periode yang akan dihapus tidak ditemukan.';
+  END IF;
+
+  -- Hapus transaksi dan tahap yang hanya terkait periode terpilih.
+  DELETE FROM public.catatan_laundry AS catatan
+  USING public.tahap_laundry AS tahap
+  WHERE catatan.tahap_id = tahap.id
+    AND tahap.periode_id = p_periode_id;
+
+  GET DIAGNOSTICS v_catatan_dihapus = ROW_COUNT;
+
+  DELETE FROM public.tahap_laundry
+  WHERE periode_id = p_periode_id;
+
+  GET DIAGNOSTICS v_tahap_dihapus = ROW_COUNT;
+
+  DELETE FROM public.periode_laundry
+  WHERE id = p_periode_id;
+
+  GET DIAGNOSTICS v_periode_dihapus = ROW_COUNT;
+
+  IF v_periode_dihapus <> 1 THEN
+    RAISE EXCEPTION 'Periode gagal dihapus. Tidak ada perubahan yang disimpan.';
+  END IF;
+
+  -- Ambil nomor terbesar setelah periode terpilih dihapus.
+  SELECT COALESCE(MAX(nomor_periode), 0)
+    INTO v_max_nomor
+  FROM public.periode_laundry;
+
+  IF v_max_nomor > 0 THEN
+    -- Pindahkan sementara semua nomor ke rentang yang aman agar indeks UNIQUE
+    -- tidak bentrok ketika nomor akhir disusun ulang.
+    v_offset := v_max_nomor + 1;
+
+    UPDATE public.periode_laundry
+    SET nomor_periode = nomor_periode + v_offset;
+
+    -- Beri nomor 1..N berdasarkan urutan periode sebelumnya.
+    WITH urutan AS (
+      SELECT id,
+             ROW_NUMBER() OVER (ORDER BY nomor_periode)::integer AS nomor_baru
+      FROM public.periode_laundry
+    )
+    UPDATE public.periode_laundry AS periode
+    SET nomor_periode = urutan.nomor_baru
+    FROM urutan
+    WHERE periode.id = urutan.id;
+
+    GET DIAGNOSTICS v_periode_digeser = ROW_COUNT;
+  END IF;
+
+  RETURN jsonb_build_object(
+    'periode_id', p_periode_id,
+    'nomor_periode_dihapus', v_nomor_periode,
+    'catatan_dihapus', v_catatan_dihapus,
+    'tahap_dihapus', v_tahap_dihapus,
+    'periode_dihapus', v_periode_dihapus,
+    'periode_digeser', v_periode_digeser
+  );
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.silas_hapus_periode(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.silas_hapus_periode(uuid) TO authenticated;
+
+COMMENT ON FUNCTION public.silas_hapus_periode(uuid) IS
+  'Menghapus satu periode beserta tahap dan catatan terkait, lalu menyusun ulang nomor seluruh periode tersisa secara berurutan.';
+
+-- Verifikasi: hasil seharusnya 1, 2, 3, ... tanpa nomor yang terlewat.
+SELECT id, nomor_periode
+FROM public.periode_laundry
+ORDER BY nomor_periode;

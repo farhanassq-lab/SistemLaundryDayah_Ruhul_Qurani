@@ -1085,7 +1085,7 @@ async function onDeletePeriod(button) {
 
     if (error) {
       if (error.code === '42883' || /function .*silas_hapus_periode.* does not exist/i.test(error.message || '')) {
-        throw new Error('Fungsi hapus periode belum dipasang. Jalankan file sql/05_hapus_periode.sql di Supabase SQL Editor, lalu coba lagi.');
+        throw new Error('Fungsi hapus periode belum dipasang. Jalankan file sql/06_urutkan_periode_setelah_hapus.sql di Supabase SQL Editor, lalu coba lagi.');
       }
       throw error;
     }
@@ -1093,11 +1093,12 @@ async function onDeletePeriod(button) {
     const result = Array.isArray(data) ? data[0] : data;
     const deletedRecords = Number(result?.catatan_dihapus || 0);
     const deletedStages = Number(result?.tahap_dihapus || stages.length);
+    const renumberedPeriods = Number(result?.periode_digeser || 0);
 
     showToast(
-      `${label} dihapus. ${deletedStages} tahap dan ${fmtInt.format(deletedRecords)} catatan laundry ikut dihapus.`,
+      `${label} dihapus. ${deletedStages} tahap dan ${fmtInt.format(deletedRecords)} catatan laundry ikut dihapus. ${renumberedPeriods} periode yang tersisa telah disusun ulang mulai dari Periode 1.`,
       'success',
-      'Periode dihapus'
+      'Periode dihapus & urutan diperbarui'
     );
 
     await refreshAll();
