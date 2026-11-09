@@ -997,8 +997,7 @@ function renderPeriods() {
           <small>${stages.length} dari 8 tahap dibuat</small>
         </div>
         <div class="period-card-actions">
-          <span class="pill ${stages.length ? 'pill-blue' : ''}">${stages.length}/8 tahap</span>
-          <button type="button" class="period-delete-btn" data-delete-period="${escapeHtml(period.id)}" aria-label="Hapus ${escapeHtml(periodLabel(period))}">Hapus periode</button>
+          <span class="pill ${stages.length ? 'pill-blue' : ''}">${stages.length}/8 tahap</span><button type="button" class="period-delete-btn" data-delete-period="${escapeHtml(period.id)}" aria-label="Hapus ${escapeHtml(periodLabel(period))}">Hapus periode</button>
         </div>
       </div>
       <div class="period-stages">
@@ -1673,6 +1672,47 @@ function addPdfLogo(doc, dataUrl, x, y, w, h, fallbackLabel) {
   doc.text(lines, x+w/2, y+h/2, {align:'center', baseline:'middle'});
 }
 
+async function createWatermarkLogoDataUrl(sourceDataUrl) {
+  if (!sourceDataUrl) return null;
+  return new Promise(resolve => {
+    const image = new Image();
+    image.onload = () => {
+      try {
+        const maxDimension = 560;
+        const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth || 1, image.naturalHeight || 1));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round((image.naturalWidth || 1) * scale));
+        canvas.height = Math.max(1, Math.round((image.naturalHeight || 1) * scale));
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        if (!context) return resolve(null);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+        const data = pixels.data;
+        for (let index = 0; index < data.length; index += 4) {
+          const alpha = data[index + 3];
+          const luminance = 0.299 * data[index] + 0.587 * data[index + 1] + 0.114 * data[index + 2];
+          // Hilangkan latar putih agar watermark hanya berupa siluet logo.
+          if (alpha < 8 || luminance > 244) {
+            data[index + 3] = 0;
+            continue;
+          }
+          data[index] = 25;
+          data[index + 1] = 58;
+          data[index + 2] = 88;
+          data[index + 3] = Math.round(alpha * 0.105);
+        }
+        context.putImageData(pixels, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch (error) {
+        console.warn('Watermark logo tidak dapat dibuat:', error);
+        resolve(null);
+      }
+    };
+    image.onerror = () => resolve(null);
+    image.src = sourceDataUrl;
+  });
+}
+
 async function createMonthlyPdf(period, stages, records) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageWidth = 297;
@@ -1682,188 +1722,181 @@ async function createMonthlyPdf(period, stages, records) {
   const contentWidth = pageWidth - left - right;
   const settings = state.reportSettings || {};
 
-  const dayahLogo = settings.logo_dayah_data || state.defaultDayahLogoData;
-  const laundryLogo = settings.logo_laundry_data || null;
-  const dayahName = safePdfText(settings.nama_dayah || 'Dayah Ruhul Qur’ani');
-  const address = safePdfText(settings.alamat || '');
-  const contact = safePdfText(settings.kontak || '');
+  // Logo RQ berada di kiri, sedangkan logo BUD RQ berada di kanan.
+  const rqLogo = settings.logo_dayah_data || state.defaultDayahLogoData || null;
+  const budLogo = settings.logo_laundry_data || null;
+  const watermarkLogo = await createWatermarkLogoDataUrl(rqLogo);
   const reportTitle = safePdfText(settings.judul_laporan || 'REKAPITULASI LAUNDRY SANTRI');
   const periodNumber = Number(period?.nomor_periode || 0);
-
   const stageById = new Map(stages.map(stage => [stage.id, Number(stage.nomor_tahap)]));
   const stageByNumber = new Map(stages.map(stage => [Number(stage.nomor_tahap), stage]));
   const generatedAt = new Date().toLocaleString('id-ID', {
     day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
   });
-
-  const totalKg = records.reduce((sum, row) => sum + Number(row.berat_kg || 0), 0);
-  const totalPieces = records.reduce((sum, row) => {
-    if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) return sum;
-    return sum + Number(row.jumlah_pakaian || 0);
-  }, 0);
-  const uniqueStudents = new Set(records.map(row => row.santri_id).filter(Boolean)).size;
-  const missingPieceRecords = records.filter(row => row.jumlah_pakaian === null || row.jumlah_pakaian === undefined).length;
-  const knownPieceRecords = records.length - missingPieceRecords;
-  const totalPiecesLabel = records.length === 0 ? '0' : knownPieceRecords > 0 ? `${fmtInt.format(totalPieces)}${missingPieceRecords ? '*' : ''}` : '—';
-
-  const stageDates = stages.map(stage => stage.tanggal_laundry).filter(Boolean).sort();
-  const dateRange = stageDates.length ? `${shortDate(stageDates[0])} – ${shortDate(stageDates[stageDates.length - 1])}` : 'Tanggal tahap belum tersedia';
+  const missingPieceRecords = records.filter(row =>
+    row.jumlah_pakaian === null || row.jumlah_pakaian === undefined
+  ).length;
 
   doc.setProperties({
     title: `${reportTitle} - Periode ${periodNumber}`,
     subject: `Rekapitulasi laundry santri Periode ${periodNumber}`,
-    author: dayahName,
+    author: safePdfText(settings.nama_dayah || 'Dayah Ruhul Qur’ani'),
     creator: 'SILAS - Sistem Informasi Laundry Santri'
   });
 
-  function drawFormalLetterhead(pageReportTitle) {
-    addPdfLogo(doc, laundryLogo, 12, 8, 20, 20, 'LOGO\nLAUNDRY');
-    addPdfLogo(doc, dayahLogo, 265, 8, 20, 20, 'LOGO\nDAYAH');
+  function drawRoomHeader(level, room) {
+    // Logo identitas: RQ kiri dan BUD RQ kanan.
+    addPdfLogo(doc, rqLogo, 10, 4.5, 24, 22, 'LOGO\nRQ');
+    addPdfLogo(doc, budLogo, 263, 4.5, 24, 22, 'LOGO\nBUD RQ');
 
-    doc.setTextColor(25, 25, 25);
+    doc.setTextColor(20, 52, 80);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12.5);
-    doc.text(dayahName, pageWidth / 2, 12, { align: 'center', maxWidth: 205 });
+    doc.setFontSize(12.2);
+    doc.text(reportTitle.toLocaleUpperCase('id-ID'), pageWidth / 2, 13.2, {
+      align: 'center', maxWidth: 205
+    });
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9.6);
-    doc.text(pageReportTitle || reportTitle, pageWidth / 2, 18, { align: 'center', maxWidth: 205 });
+    // Ornamen kecil di bawah judul, bukan kop surat.
+    doc.setDrawColor(184, 148, 86);
+    doc.setLineWidth(0.35);
+    doc.line(111, 18.2, 143, 18.2);
+    doc.line(154, 18.2, 186, 18.2);
+    doc.setFillColor(20, 52, 80);
+    doc.circle(pageWidth / 2, 18.2, 1.15, 'F');
+    doc.setDrawColor(184, 148, 86);
+    doc.line(145.8, 18.2, 147.2, 16.9);
+    doc.line(149.8, 16.9, 151.2, 18.2);
 
-    let infoY = 22;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.9);
-    doc.setTextColor(75, 75, 75);
-    if (address) {
-      const addressLines = doc.splitTextToSize(address, 200).slice(0, 3);
-      doc.text(addressLines, pageWidth / 2, infoY, { align: 'center', lineHeightFactor: 1.05 });
-      infoY += addressLines.length * 2.8;
-    }
-    if (contact) {
-      doc.text(contact, pageWidth / 2, infoY + 0.2, { align: 'center', maxWidth: 200 });
-      infoY += 3;
-    }
-
-    const ruleY = Math.max(32, infoY + 1.2);
-    doc.setDrawColor(60, 60, 60);
-    doc.setLineWidth(0.5);
-    doc.line(left, ruleY, pageWidth - right, ruleY);
-    doc.setDrawColor(140, 140, 140);
-    doc.setLineWidth(0.2);
-    doc.line(left, ruleY + 1.2, pageWidth - right, ruleY + 1.2);
-    return ruleY + 4;
-  }
-
-  function drawPeriodSummary(startY) {
-    doc.setDrawColor(120, 120, 120);
-    doc.setLineWidth(0.2);
-    doc.rect(left, startY, contentWidth, 18);
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.6);
-    doc.setTextColor(35, 35, 35);
-    doc.text(`PERIODE ${periodNumber}`, left + 3, startY + 5);
+    // Informasi di bagian atas hanya memuat jenjang dan kamar.
+    const boxX = 61;
+    const boxY = 22.5;
+    const boxW = 175;
+    const boxH = 10.5;
+    doc.setFillColor(250, 252, 254);
+    doc.setDrawColor(166, 181, 195);
+    doc.setLineWidth(0.22);
+    doc.roundedRect(boxX, boxY, boxW, boxH, 3, 3, 'FD');
+    doc.setDrawColor(185, 195, 205);
+    doc.line(boxX + boxW / 2, boxY + 1.8, boxX + boxW / 2, boxY + boxH - 1.8);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.4);
-    doc.text(`Rentang tahap : ${dateRange}`, left + 3, startY + 10);
-    doc.text(`Santri tercatat : ${fmtInt.format(uniqueStudents)}`, left + 72, startY + 10);
-    doc.text(`Total berat : ${fmt.format(totalKg)} kg`, left + 132, startY + 10);
-    doc.text(`Total pakaian : ${totalPiecesLabel} potong`, left + 192, startY + 10);
-    doc.text(`Dicetak : ${generatedAt}`, left + 3, startY + 15);
-    if (missingPieceRecords) {
-      doc.text(`Catatan: tanda * berarti sebagian jumlah pakaian pada data lama belum tercatat.`, pageWidth - right - 3, startY + 15, { align: 'right', maxWidth: 145 });
+    doc.setFontSize(5.4);
+    doc.setTextColor(91, 105, 119);
+    doc.text('JENJANG', boxX + 7, boxY + 3.7);
+    doc.text('KAMAR', boxX + boxW / 2 + 7, boxY + 3.7);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.1);
+    doc.setTextColor(25, 48, 70);
+    doc.text(safePdfText(level || '—'), boxX + 7, boxY + 8.2, { maxWidth: 75 });
+    doc.text(safePdfText(room || '—'), boxX + boxW / 2 + 7, boxY + 8.2, { maxWidth: 75 });
+
+    // Siluet RQ dibuat transparan dan diletakkan di belakang tabel.
+    if (watermarkLogo) {
+      try {
+        doc.addImage(watermarkLogo, 'PNG', 103, 61, 91, 91, undefined, 'FAST');
+      } catch (error) {
+        console.warn('Watermark tidak dapat ditambahkan ke PDF:', error);
+      }
     }
-    return startY + 22;
   }
 
-  function drawRoomIdentity(startY, level, room) {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.8);
-    doc.setTextColor(35, 35, 35);
-    doc.text('INFORMASI LAPORAN', left, startY);
+  function drawFooter(pageNumber, pageCount) {
+    // Catatan data lama yang belum memiliki jumlah pakaian.
+    if (missingPieceRecords > 0) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(5.1);
+      doc.setTextColor(105, 113, 122);
+      doc.text('* Sebagian catatan lama belum memiliki data jumlah pakaian.', left, 193.2);
+    }
 
-    const boxY = startY + 2.5;
-    doc.setDrawColor(110, 110, 110);
-    doc.setLineWidth(0.2);
-    doc.rect(left, boxY, contentWidth, 13.5);
-    // vertical dividers
-    const x1 = left + 58;
-    const x2 = left + 130;
-    const x3 = left + 208;
-    doc.line(x1, boxY, x1, boxY + 13.5);
-    doc.line(x2, boxY, x2, boxY + 13.5);
-    doc.line(x3, boxY, x3, boxY + 13.5);
+    // Garis footer navy dengan aksen emas.
+    doc.setDrawColor(184, 148, 86);
+    doc.setLineWidth(0.55);
+    doc.line(left, 196.1, pageWidth - right, 196.1);
+    doc.setDrawColor(20, 52, 80);
+    doc.setLineWidth(0.28);
+    doc.line(left, 198.1, 137, 198.1);
+    doc.line(160, 198.1, pageWidth - right, 198.1);
+
+    // Ornamen siluet bangunan/masjid kecil di tengah footer.
+    doc.setFillColor(20, 52, 80);
+    doc.rect(141.5, 197.5, 14, 4.3, 'F');
+    doc.triangle(140.2, 197.5, 148.5, 193.4, 156.8, 197.5, 'F');
+    doc.rect(137.8, 198.3, 2.8, 3.5, 'F');
+    doc.triangle(137.5, 198.3, 139.2, 195.6, 140.9, 198.3, 'F');
+    doc.rect(156.4, 198.3, 2.8, 3.5, 'F');
+    doc.triangle(156.1, 198.3, 157.8, 195.6, 159.5, 198.3, 'F');
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(147.1, 199.7, 2.8, 2.1, 1.2, 1.2, 'F');
+    doc.rect(147.1, 200.8, 2.8, 1, 'F');
+    doc.setFillColor(255, 255, 255);
+    doc.rect(143.4, 199.1, 1.1, 1.2, 'F');
+    doc.rect(152.5, 199.1, 1.1, 1.2, 'F');
+
+    // Detail geometris tipis di kedua sudut footer.
+    doc.setDrawColor(184, 148, 86);
+    doc.setLineWidth(0.22);
+    doc.line(10, 198.8, 17, 205.2);
+    doc.line(17, 205.2, 24, 198.8);
+    doc.line(273, 198.8, 280, 205.2);
+    doc.line(280, 205.2, 287, 198.8);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.2);
-    doc.setTextColor(70, 70, 70);
-    doc.text('Periode', left + 3, boxY + 4.1);
-    doc.text('Jenjang', x1 + 3, boxY + 4.1);
-    doc.text('Kamar', x2 + 3, boxY + 4.1);
-    doc.text('Tanggal Cetak', x3 + 3, boxY + 4.1);
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.2);
-    doc.setTextColor(25, 25, 25);
-    doc.text(`Periode ${periodNumber}`, left + 3, boxY + 9.5, { maxWidth: 50 });
-    doc.text(safePdfText(level), x1 + 3, boxY + 9.5, { maxWidth: 64 });
-    doc.text(safePdfText(room), x2 + 3, boxY + 9.5, { maxWidth: 70 });
-    doc.text(generatedAt, x3 + 3, boxY + 9.5, { maxWidth: 63 });
-
-    return boxY + 18;
+    doc.setFontSize(5.7);
+    doc.setTextColor(65, 78, 91);
+    doc.text(`SILAS · Periode ${periodNumber} · Dicetak ${generatedAt}`, left + 10, 206.1, {
+      maxWidth: 112
+    });
+    doc.text(`Halaman ${pageNumber} dari ${pageCount}`, pageWidth - right, 206.1, {
+      align: 'right'
+    });
   }
 
-  function addRoomStartPage(level, room) {
-    doc.addPage('a4', 'landscape');
-    const headerStart = drawFormalLetterhead(reportTitle);
-    return drawRoomIdentity(headerStart + 2, level, room);
-  }
-
-  // Setiap halaman lanjutan mengulang KOP lengkap dan identitas kamar yang sama.
-  // Fungsi ini dipanggil melalui hook willDrawPage agar header digambar SEBELUM tabel.
-  function drawRoomContinuationHeader(level, room) {
-    const headerStart = drawFormalLetterhead(reportTitle);
-    return drawRoomIdentity(headerStart + 2, level, room);
-  }
-
-  function formatPiecesLabel(value, hasPieces, missingCount, mode = 'normal') {
-    if (!hasPieces) return mode === 'compact' ? '—*' : '— *';
-    const base = `${fmtInt.format(value)} potong`;
-    return `${base}${missingCount ? '*' : ''}`;
+  function formatPieces(value, hasPieces, missingCount) {
+    if (!hasPieces) return missingCount > 0 ? '—*' : '—';
+    return `${fmtInt.format(value)} potong${missingCount > 0 ? '*' : ''}`;
   }
 
   function formatStageCell(stageItem) {
     if (!stageItem || !stageItem.records) return '—';
-    const piecesText = formatPiecesLabel(stageItem.pieces, stageItem.hasPieces, stageItem.missingPieces, 'compact');
-    return `${fmt.format(stageItem.kg)} kg\n${piecesText}`;
+    return `${fmt.format(stageItem.kg)} kg\n${formatPieces(stageItem.pieces, stageItem.hasPieces, stageItem.missingPieces)}`;
   }
 
-  const levels = [...new Set(records.map(row => row.jenjang_nama_snapshot || 'Jenjang belum diisi'))].sort((a, b) => a.localeCompare(b, 'id'));
+  const levels = [...new Set(
+    records.map(row => row.jenjang_nama_snapshot || 'Jenjang belum diisi')
+  )].sort((a, b) => a.localeCompare(b, 'id'));
 
   if (!levels.length) {
-    const headerStart = drawFormalLetterhead(reportTitle);
-    let y = drawPeriodSummary(headerStart + 1);
-    doc.setDrawColor(120, 120, 120);
-    doc.setLineWidth(0.2);
-    doc.rect(left, y, contentWidth, 20);
+    drawRoomHeader('—', '—');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(30, 30, 30);
-    doc.text('Belum ada catatan laundry pada periode ini.', left + 4, y + 8);
+    doc.setFontSize(10);
+    doc.setTextColor(45, 60, 75);
+    doc.text('Belum ada catatan laundry pada periode ini.', left + 2, 51);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
-    doc.setTextColor(80, 80, 80);
-    doc.text('Laporan tetap dibuat sebagai dokumentasi periode.', left + 4, y + 14);
+    doc.setTextColor(100, 110, 120);
+    doc.text('Laporan tetap dibuat sebagai dokumentasi periode.', left + 2, 58);
   } else {
     let roomSequence = 0;
+
     for (const level of levels) {
-      const levelRecords = records.filter(row => (row.jenjang_nama_snapshot || 'Jenjang belum diisi') === level);
-      const rooms = [...new Set(levelRecords.map(row => row.kamar_nama_snapshot || 'Kamar belum diisi'))].sort((a, b) => a.localeCompare(b, 'id'));
+      const levelRecords = records.filter(row =>
+        (row.jenjang_nama_snapshot || 'Jenjang belum diisi') === level
+      );
+      const rooms = [...new Set(
+        levelRecords.map(row => row.kamar_nama_snapshot || 'Kamar belum diisi')
+      )].sort((a, b) => a.localeCompare(b, 'id'));
 
       for (const room of rooms) {
         roomSequence += 1;
-        const roomRecords = levelRecords.filter(row => (row.kamar_nama_snapshot || 'Kamar belum diisi') === room);
+        if (roomSequence > 1) doc.addPage('a4', 'landscape');
+
+        const roomRecords = levelRecords.filter(row =>
+          (row.kamar_nama_snapshot || 'Kamar belum diisi') === room
+        );
         const students = new Map();
+
         for (const row of roomRecords) {
           const studentKey = row.santri_id || `${row.santri_nama_snapshot || 'Tanpa nama'}|${room}`;
           if (!students.has(studentKey)) {
@@ -1876,13 +1909,16 @@ async function createMonthlyPdf(period, stages, records) {
               missingPieces: 0
             });
           }
-          const item = students.get(studentKey);
+
+          const student = students.get(studentKey);
           const stageNo = stageById.get(row.tahap_id);
           if (stageNo) {
-            if (!item.stages[stageNo]) {
-              item.stages[stageNo] = { kg: 0, pieces: 0, hasPieces: false, missingPieces: 0, records: 0 };
+            if (!student.stages[stageNo]) {
+              student.stages[stageNo] = {
+                kg: 0, pieces: 0, hasPieces: false, missingPieces: 0, records: 0
+              };
             }
-            const stageItem = item.stages[stageNo];
+            const stageItem = student.stages[stageNo];
             stageItem.kg += Number(row.berat_kg || 0);
             stageItem.records += 1;
             if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) {
@@ -1892,64 +1928,62 @@ async function createMonthlyPdf(period, stages, records) {
               stageItem.hasPieces = true;
             }
           }
-          item.kg += Number(row.berat_kg || 0);
+
+          student.kg += Number(row.berat_kg || 0);
           if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) {
-            item.missingPieces += 1;
+            student.missingPieces += 1;
           } else {
-            item.pieces += Number(row.jumlah_pakaian || 0);
-            item.hasPieces = true;
+            student.pieces += Number(row.jumlah_pakaian || 0);
+            student.hasPieces = true;
           }
         }
 
-        const sortedStudents = [...students.values()].sort((a, b) => a.name.localeCompare(b.name, 'id'));
+        const sortedStudents = [...students.values()].sort((a, b) =>
+          a.name.localeCompare(b.name, 'id')
+        );
         const roomKg = roomRecords.reduce((sum, row) => sum + Number(row.berat_kg || 0), 0);
         const roomPieces = roomRecords.reduce((sum, row) => {
-          if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) return sum;
-          return sum + Number(row.jumlah_pakaian || 0);
+          return sum + (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined
+            ? 0 : Number(row.jumlah_pakaian || 0));
         }, 0);
-        const roomMissingPieces = roomRecords.filter(row => row.jumlah_pakaian === null || row.jumlah_pakaian === undefined).length;
+        const roomMissingPieces = roomRecords.filter(row =>
+          row.jumlah_pakaian === null || row.jumlah_pakaian === undefined
+        ).length;
         const roomHasPieces = roomRecords.length > roomMissingPieces;
 
-        const roomStageTotals = Array.from({ length: 8 }, (_, stageIndex) => {
-          const stageNo = stageIndex + 1;
+        const stageTotals = Array.from({ length: 8 }, (_, index) => {
+          const stageNo = index + 1;
           const stageRows = roomRecords.filter(row => stageById.get(row.tahap_id) === stageNo);
           if (!stageRows.length) return '—';
           const stageKg = stageRows.reduce((sum, row) => sum + Number(row.berat_kg || 0), 0);
-          const stageMissing = stageRows.filter(row => row.jumlah_pakaian === null || row.jumlah_pakaian === undefined).length;
+          const stageMissing = stageRows.filter(row =>
+            row.jumlah_pakaian === null || row.jumlah_pakaian === undefined
+          ).length;
           const stageKnown = stageRows.length - stageMissing;
           const stagePieces = stageRows.reduce((sum, row) => {
-            if (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined) return sum;
-            return sum + Number(row.jumlah_pakaian || 0);
+            return sum + (row.jumlah_pakaian === null || row.jumlah_pakaian === undefined
+              ? 0 : Number(row.jumlah_pakaian || 0));
           }, 0);
-          return `${fmt.format(stageKg)} kg\n${stageKnown > 0 ? `${fmtInt.format(stagePieces)} potong${stageMissing ? '*' : ''}` : '—*'}`;
+          return `${fmt.format(stageKg)} kg\n${formatPieces(stagePieces, stageKnown > 0, stageMissing)}`;
         });
 
         const body = sortedStudents.map((student, index) => [
           String(index + 1),
           student.name,
-          ...Array.from({ length: 8 }, (_, stageIndex) => formatStageCell(student.stages[stageIndex + 1])),
+          ...Array.from({ length: 8 }, (_, stageIndex) =>
+            formatStageCell(student.stages[stageIndex + 1])
+          ),
           `${fmt.format(student.kg)} kg`,
-          formatPiecesLabel(student.pieces, student.hasPieces, student.missingPieces, 'compact')
+          formatPieces(student.pieces, student.hasPieces, student.missingPieces)
         ]);
 
         body.push([
           '',
           'TOTAL KAMAR',
-          ...roomStageTotals,
+          ...stageTotals,
           `${fmt.format(roomKg)} kg`,
-          formatPiecesLabel(roomPieces, roomHasPieces, roomMissingPieces, 'compact')
+          formatPieces(roomPieces, roomHasPieces, roomMissingPieces)
         ]);
-
-        let startY;
-        if (roomSequence === 1) {
-          const firstHeader = drawFormalLetterhead(reportTitle);
-          // Identitas jenjang dan kamar diletakkan langsung di bawah KOP.
-          startY = drawRoomIdentity(firstHeader + 2, level, room);
-          // Ringkasan periode diletakkan setelah identitas kamar agar urutannya rapi.
-          startY = drawPeriodSummary(startY + 1.5);
-        } else {
-          startY = addRoomStartPage(level, room);
-        }
 
         const stageHeads = Array.from({ length: 8 }, (_, index) => {
           const stage = stageByNumber.get(index + 1);
@@ -1958,38 +1992,40 @@ async function createMonthlyPdf(period, stages, records) {
         });
 
         autoTable(doc, {
-          startY,
+          startY: 36,
           head: [['No', 'Nama santri', ...stageHeads, 'Total\nBerat', 'Total\nPakaian']],
           body,
           theme: 'grid',
-          // Ruang atas disediakan untuk KOP + identitas kamar pada halaman lanjutan.
-          margin: { left, right, top: 68, bottom: 15 },
+          margin: { left, right, top: 36, bottom: 18 },
+          tableWidth: contentWidth,
           showHead: 'everyPage',
           rowPageBreak: 'avoid',
           styles: {
             font: 'helvetica',
-            fontSize: 5.6,
-            cellPadding: 1.15,
+            fontSize: 5.2,
+            cellPadding: 0.72,
             overflow: 'linebreak',
-            textColor: [35, 35, 35],
-            lineColor: [145, 145, 145],
+            textColor: [32, 43, 54],
+            lineColor: [166, 178, 190],
             lineWidth: 0.12,
             valign: 'middle',
-            minCellHeight: 9.2
+            minCellHeight: 6.5,
+            fillColor: false
           },
           headStyles: {
-            fillColor: [245, 245, 245],
-            textColor: [20, 20, 20],
-            lineColor: [125, 125, 125],
-            lineWidth: 0.15,
+            fillColor: [20, 52, 80],
+            textColor: [255, 255, 255],
+            lineColor: [20, 52, 80],
+            lineWidth: 0.16,
             fontStyle: 'bold',
             halign: 'center',
-            fontSize: 5.6,
-            minCellHeight: 9.3
+            fontSize: 5.35,
+            minCellHeight: 8.6,
+            cellPadding: 0.8
           },
           columnStyles: {
             0: { cellWidth: 7, halign: 'center' },
-            1: { cellWidth: 42, halign: 'left' },
+            1: { cellWidth: 44, halign: 'left' },
             2: { cellWidth: 22.5, halign: 'center' },
             3: { cellWidth: 22.5, halign: 'center' },
             4: { cellWidth: 22.5, halign: 'center' },
@@ -2004,15 +2040,14 @@ async function createMonthlyPdf(period, stages, records) {
           didParseCell: data => {
             if (data.section === 'body' && data.row.index === body.length - 1) {
               data.cell.styles.fontStyle = 'bold';
-              data.cell.styles.fillColor = [245, 245, 245];
-              data.cell.styles.textColor = [20, 20, 20];
+              data.cell.styles.fillColor = [232, 239, 246];
+              data.cell.styles.textColor = [20, 52, 80];
+              data.cell.styles.minCellHeight = 7.2;
             }
           },
-          willDrawPage: data => {
-            // Hook ini berjalan sebelum baris tabel digambar, sehingga KOP tidak menimpa tabel.
-            if (Number(data.pageNumber || 1) > 1) {
-              drawRoomContinuationHeader(level, room);
-            }
+          willDrawPage: () => {
+            // Header dan watermark selalu diulang, termasuk halaman lanjutan kamar yang sama.
+            drawRoomHeader(level, room);
           }
         });
       }
@@ -2022,14 +2057,7 @@ async function createMonthlyPdf(period, stages, records) {
   const pageCount = doc.getNumberOfPages();
   for (let page = 1; page <= pageCount; page++) {
     doc.setPage(page);
-    doc.setDrawColor(150, 150, 150);
-    doc.setLineWidth(0.18);
-    doc.line(left, pageHeight - 9, pageWidth - right, pageHeight - 9);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.2);
-    doc.setTextColor(85, 85, 85);
-    doc.text(`SILAS · ${periodLabel(period)} · Dicetak ${generatedAt}`, left, pageHeight - 4);
-    doc.text(`Halaman ${page} dari ${pageCount}`, pageWidth - right, pageHeight - 4, { align: 'right' });
+    drawFooter(page, pageCount);
   }
 
   doc.save(`SILAS-Rekap-Laundry-Periode-${periodNumber}.pdf`);
@@ -2153,8 +2181,8 @@ function renderReportLogoPreviews() {
 function updateReportSettingsPreview() {
   if (!$('#previewDayahName')) return;
   $('#previewDayahName').textContent = ($('#settingDayahName').value || 'Nama Dayah').toLocaleUpperCase('id-ID');
-  $('#previewAddress').textContent = $('#settingAddress').value.trim() || 'Alamat dayah akan tampil di sini';
-  $('#previewContact').textContent = $('#settingContact').value.trim() || 'Kontak / identitas tambahan';
+  $('#previewAddress').textContent = 'Informasi PDF: Jenjang dan Kamar';
+  $('#previewContact').textContent = 'Watermark siluet RQ · Footer dekoratif';
   $('#previewReportTitle').textContent = ($('#settingReportTitle').value || 'Judul laporan').toLocaleUpperCase('id-ID');
 }
 
@@ -2195,8 +2223,8 @@ async function onSaveReportSettings(event) {
   if (error) return showMessage('#reportSettingsMessage',`${friendlyError(error)}. Pastikan script sql/03_periode_dan_pengaturan.sql sudah dijalankan.`, 'error');
   state.reportSettings = {...state.reportSettings,...data};
   renderReportSettingsForm();
-  showMessage('#reportSettingsMessage','Pengaturan kop surat berhasil disimpan dan akan digunakan pada PDF berikutnya.','success');
-  showToast('Pengaturan laporan disimpan.','success');
+  showMessage('#reportSettingsMessage','Pengaturan logo laporan berhasil disimpan dan akan digunakan pada PDF berikutnya.','success');
+  showToast('Pengaturan logo laporan disimpan.','success');
 }
 
 function resetReportSettingsForm() {
