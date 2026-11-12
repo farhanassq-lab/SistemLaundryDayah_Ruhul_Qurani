@@ -35,7 +35,7 @@
     </div>
     <div class="auth-panel">
       <form id="loginForm" class="auth-form">
-        <span class="eyebrow">SELAMAT DATANG</span>
+        <img class="login-dayah-logo" src="./assets/logo-ruhul-qurani.png" alt="Dayah Ruhul Qur’ani" width="54" height="54">
         <h2>Masuk ke SILAS</h2>
         <p class="muted">Gunakan akun petugas yang telah dibuat oleh pengelola.</p>
         <label for="loginEmail">Email</label>
@@ -79,64 +79,21 @@
       </header>
 
       <section id="view-dashboard" class="view-section">
-        <section class="brand-hero premium-hero" aria-label="Identitas SILAS Dayah Ruhul Qurani">
-          <div class="brand-hero-photo"></div><div class="brand-hero-shade"></div>
-          <div class="brand-hero-content">
-            <div class="hero-identity">
-              <img class="hero-dayah-logo" src="./assets/logo-ruhul-qurani.png" alt="Logo Dayah Ruhul Qur'ani">
-              <div class="hero-title-block"><div class="hero-kicker">DAYAH RUHUL QUR’ANI</div><h1>SILAS</h1><p>Sistem Informasi Laundry Santri</p><div class="hero-tagline">Bersih Pakaian · Nyaman Ibadah · Semangat Menuntut Ilmu</div></div>
-            </div>
-            <div class="hero-right">
-              <div class="laundry-logo-placeholder premium-laundry-placeholder" id="heroLaundryLogo"><span class="laundry-placeholder-icon">＋</span><div><strong>Logo Laundry BUD_RQ</strong><small>Tambahkan di Pengaturan</small></div></div>
-            </div>
-          </div>
-          <div class="hero-bottom-line"><span>RUHUL QUR’ANI</span><i class="hero-bottom-dot"></i><span>ADMINISTRASI LAUNDRY SANTRI</span></div>
-        </section>
-
-        <div class="dashboard-intro-grid">
-        <section class="welcome-photo-card" aria-label="Santri Dayah Ruhul Qur'ani">
-          <img src="./assets/santri-berkelompok.jpg" alt="Foto santri Dayah Ruhul Qur'ani berkelompok">
-          <div class="welcome-photo-overlay"></div>
-          <div class="welcome-photo-copy">
-            <span class="welcome-chip">SELAMAT DATANG</span>
-            <h2>Assalamu’alaikum, Pengurus Dayah</h2>
-            <p>Kelola pencatatan laundry santri dengan lebih mudah, rapi, dan terdata.</p>
-          </div>
-          <div class="welcome-photo-caption"><span class="caption-dot"></span> Dayah Ruhul Qur’ani</div>
-        </section>
-
-          <section class="director-section director-side-section">
-            <div class="director-section-heading"><div><p class="eyebrow">ARAHAN & MOTIVASI</p><h2>Direktur Badan Usaha Dayah</h2><p class="muted">Pesan dan motivasi untuk pelayanan yang lebih baik.</p></div><span class="director-section-mark">✦</span></div>
-            <article class="director-card" id="directorCard">
-              <div class="director-photo-wrap" id="directorDashboardPhoto">
-                <div class="director-photo-placeholder"><span>DRQ</span><small>Foto direktur<br>ditambahkan melalui Pengaturan</small></div>
-              </div>
-              <div class="director-details">
-                <span class="director-label">PIMPINAN BADAN USAHA</span>
-                <h3 id="directorDashboardName">Nama Direktur</h3>
-                <p class="director-role" id="directorDashboardRole">Direktur Badan Usaha Dayah Ruhul Qur’ani</p>
-                <div class="director-divider"></div>
-                <blockquote id="directorDashboardQuote">“Kebersihan dan kerapian adalah bagian dari pelayanan. Semoga setiap ikhtiar memudahkan santri dalam menuntut ilmu.”</blockquote>
-              </div>
-              <div class="director-card-glow"></div>
-            </article>
-          </section>
-        </div>
-        <div class="page-heading dashboard-heading">
-          <div><p class="eyebrow">RINGKASAN</p><h1>Dashboard</h1><p class="muted">Semua pencatatan laundry dalam satu tempat.</p></div>
+        <header class="dashboard-overview">
+          <div><p class="eyebrow">DAYAH RUHUL QUR’ANI</p><h1>Dashboard laundry</h1>
+          <p><strong id="statPeriodLabel">Memuat periode…</strong> <span id="dashboardCurrentStage"></span></p></div>
           <button class="btn btn-primary" data-goto="input">＋ Catat laundry</button>
-        </div>
+        </header>
         <div class="stat-grid">
-          <article class="stat-card premium-stat"><div class="stat-top"><span>Santri aktif</span><span class="stat-icon indigo">♙</span></div><strong id="statSantri">—</strong><small>Terdaftar untuk laundry</small></article>
-          <article class="stat-card premium-stat"><div class="stat-top"><span>Total kamar</span><span class="stat-icon blue">⌂</span></div><strong id="statKamar">—</strong><small>Di seluruh jenjang</small></article>
-          <article class="stat-card premium-stat"><div class="stat-top"><span>Total laundry</span><span class="stat-icon teal">↕</span></div><strong id="statKg">0 kg</strong><small id="statPeriodLabel">Periode terbaru</small></article>
-          <article class="stat-card premium-stat"><div class="stat-top"><span>Tahap tercatat</span><span class="stat-icon amber">▣</span></div><strong id="statTahap">0</strong><small>Memiliki catatan laundry</small></article>
+          <article class="stat-card"><div class="stat-top">Santri tercatat</div><strong id="statSantri">—</strong><small>Periode terbaru</small></article>
+          <article class="stat-card"><div class="stat-top">Berat laundry</div><strong id="statKg">—</strong><small>Periode terbaru</small></article>
+          <article class="stat-card"><div class="stat-top">Jumlah pakaian</div><strong id="statPieces">—</strong><small>Potong · periode terbaru</small></article>
+          <article class="stat-card"><div class="stat-top">Masalah terbuka</div><strong id="statIssues">—</strong><small>Semua periode</small></article>
         </div>
-        <div class="content-grid dashboard-grid dashboard-main-grid">
-          <article class="panel premium-panel dashboard-period-panel"><div class="panel-heading"><div><h2>Periode laundry</h2><p class="muted">Pantau Tahap 1 sampai Tahap 8.</p></div><button class="btn btn-light btn-sm" data-goto="tahap">Kelola tahap</button></div><div id="dashboardStages" class="stage-list"><div class="empty-state">Memuat data…</div></div></article>
-
+        <div class="content-grid dashboard-grid">
+          <article class="panel"><div class="panel-heading"><h2>Rekap per kamar</h2></div><div id="dashboardRooms" aria-live="polite"></div></article>
+          <article class="panel"><div class="panel-heading"><h2>Jadwal tahap</h2></div><div id="dashboardStages" class="stage-list"></div></article>
         </div>
-        <article class="panel quick-panel premium-panel dashboard-quick-panel"><div class="panel-heading"><div><h2>Akses cepat</h2><p class="muted">Menu yang sering digunakan.</p></div></div><div class="quick-actions-grid"><button class="quick-action" data-goto="input"><span class="quick-icon">＋</span><span><strong>Input laundry</strong><small>Catat berat dan jumlah pakaian</small></span><b>→</b></button><button class="quick-action" data-goto="santri"><span class="quick-icon">♙</span><span><strong>Tambah santri</strong><small>Kelola data santri dan kamar</small></span><b>→</b></button><button class="quick-action" data-goto="laporan"><span class="quick-icon">▤</span><span><strong>Buat laporan PDF</strong><small>Gabungkan rekap semua kamar</small></span><b>→</b></button></div></article>
       </section>
 
       <section id="view-input" class="view-section hidden">
@@ -146,16 +103,16 @@
             <div class="panel-heading"><div><h2>Catatan baru</h2><p class="muted">Pilih periode dan tahap, lalu catat santri.</p></div><span class="pill pill-blue">Input cepat</span></div>
             <form id="laundryForm">
               <div class="form-row two-col"><div class="field"><label for="inputPeriod">Periode</label><select id="inputPeriod" required><option value="">Pilih periode</option></select></div><div class="field"><label for="inputStage">Tahap laundry</label><select id="inputStage" required><option value="">Pilih tahap</option></select></div></div>
-              <div class="field autocomplete-field"><label for="studentSearch">Nama santri</label><input id="studentSearch" type="search" autocomplete="off" placeholder="Ketik nama atau NIS…" required><div id="studentSuggestions" class="suggestions hidden"></div><small class="field-help">Hanya santri aktif yang memiliki kamar ditampilkan.</small></div>
+              <div class="field autocomplete-field"><label for="studentSearch">Nama atau NIS</label><input id="studentSearch" type="search" autocomplete="off" placeholder="Ketik nama atau NIS…" required><div id="studentSuggestions" class="suggestions hidden"></div><small class="field-help">Hanya santri aktif yang memiliki kamar ditampilkan.</small></div>
               <div id="studentBio" class="bio-card hidden"></div>
-              <div class="form-row two-col"><div class="field"><label for="weightInput">Berat laundry (kg) <span class="required">*</span></label><input id="weightInput" type="number" min="0.01" max="9999" step="0.01" inputmode="decimal" placeholder="Contoh: 3.5" required><small class="field-help">Harus lebih dari 0 kg.</small></div><div class="field"><label for="piecesInput">Jumlah pakaian</label><input id="piecesInput" type="number" min="0" max="100000" step="1" inputmode="numeric" placeholder="Opsional"><small class="field-help">Boleh dikosongkan.</small></div></div>
+              <div class="form-row two-col"><div class="field"><label for="weightInput">Berat laundry (kg) <span class="required">*</span></label><input id="weightInput" type="number" min="0.01" max="9999" step="0.01" inputmode="decimal" placeholder="Contoh: 3.5" required><small class="field-help">Harus lebih dari 0 kg.</small></div><div class="field"><label for="piecesInput">Jumlah pakaian (potong)</label><input id="piecesInput" type="number" min="1" max="100000" step="1" inputmode="numeric" required></div></div>
               <div id="laundryMessage" class="inline-message hidden" role="status"></div>
               <div class="form-actions"><button type="reset" class="btn btn-light">Bersihkan</button><button id="saveLaundryBtn" type="submit" class="btn btn-primary">Simpan catatan <span>→</span></button></div>
             </form>
           </article>
-          <aside class="panel helper-panel"><div class="helper-icon">✦</div><h3>Catatan otomatis</h3><p class="muted">Biodata diambil dari data santri. Kamu tidak perlu memilih jenjang atau kamar saat mencatat laundry.</p><div class="helper-rule"><span>01</span><div><strong>Pilih santri</strong><small>Gunakan nama atau NIS.</small></div></div><div class="helper-rule"><span>02</span><div><strong>Isi kilogram</strong><small>Jumlah pakaian opsional.</small></div></div><div class="helper-rule"><span>03</span><div><strong>Simpan</strong><small>Catatan masuk ke rekap tahap.</small></div></div><div class="notice-box"><strong>Anti-duplikat</strong><p>Satu santri hanya dapat dicatat sekali pada tahap yang sama.</p></div></aside>
+
         </div>
-        <article class="panel table-panel"><div class="panel-heading"><div><h2>Catatan pada tahap ini</h2><p class="muted">Daftar catatan yang sudah disimpan.</p></div><div id="stageTotals" class="total-chip">0 catatan · 0 kg</div></div><div class="table-wrap"><table><thead><tr><th>Nama santri</th><th>Jenjang</th><th>Kamar</th><th>Berat</th><th>Jumlah pakaian</th><th>Waktu input</th><th>Aksi</th></tr></thead><tbody id="stageRecordsBody"><tr><td colspan="7" class="empty-cell">Pilih periode dan tahap.</td></tr></tbody></table></div></article>
+        <article class="panel table-panel"><div class="panel-heading"><div><h2>Catatan terbaru pada tahap ini</h2><p class="muted">Daftar catatan yang sudah disimpan.</p></div><div id="stageTotals" class="total-chip">0 catatan · 0 kg</div></div><div class="table-wrap"><table><thead><tr><th>Nama santri</th><th>Jenjang</th><th>Kamar</th><th>Berat</th><th>Jumlah pakaian</th><th>Waktu input</th><th>Aksi</th></tr></thead><tbody id="stageRecordsBody"><tr><td colspan="7" class="empty-cell">Pilih periode dan tahap.</td></tr></tbody></table></div></article>
       </section>
 
       <section id="view-santri" class="view-section hidden">
@@ -178,9 +135,9 @@
         <article class="panel issue-entry-card">
           <div class="issue-entry-icon">⚠</div>
           <div class="issue-entry-copy"><strong>Ada pakaian hilang, rusak, tertukar, atau kurang bersih?</strong><p class="muted">Buat laporan beserta foto bukti dan siapkan pesan untuk grup WhatsApp laundry.</p></div>
-          <button class="btn btn-primary" type="button" data-goto="masalah">＋ Buat laporan masalah</button>
+          <button class="btn btn-primary" type="button" data-goto="masalah">Lihat laporan masalah</button>
         </article>
-        <div class="report-layout"><article class="panel form-panel"><div class="panel-heading"><div><h2>Buat laporan periode</h2><p class="muted">PDF A4 lanskap dengan desain formal minim warna. Setiap kamar mempunyai KOP surat sendiri dan tabel tahap yang rapi.</p></div><div class="report-icon">▤</div></div><form id="reportForm"><div class="field"><label for="reportPeriod">Pilih periode *</label><select id="reportPeriod" required><option value="">Pilih periode</option></select></div><div class="report-includes"><strong>Isi laporan</strong><div>✓ Kop surat dapat diedit melalui Pengaturan</div><div>✓ Logo Laundry di kiri dan logo Dayah di kanan</div><div>✓ Berat dan jumlah pakaian pada setiap Tahap 1–8</div><div>✓ Satu kamar per halaman; kamar ramai dilanjutkan di halaman berikutnya</div><div>✓ Rekap jenjang → kamar → santri dalam satu PDF</div></div><div id="reportMessage" class="inline-message hidden" role="status"></div><button class="btn btn-primary btn-wide" type="submit">Buat dan unduh PDF <span>↓</span></button></form></article><aside class="panel helper-panel"><div class="helper-icon">▤</div><h3>Rekap otomatis</h3><p class="muted">Data dikelompokkan berdasarkan jenjang dan kamar yang tersimpan saat laundry dicatat. Perpindahan kamar di masa depan tidak mengubah riwayat lama.</p><div class="notice-box"><strong>Jumlah pakaian wajib diisi</strong><p>Setiap pencatatan baru harus memuat minimal 1 potong. Catatan lama yang belum memiliki jumlah pakaian akan ditandai dan tidak ikut dijumlahkan.</p></div></aside></div>
+        <div class="report-layout"><article class="panel form-panel"><div class="panel-heading"><div><h2>Buat laporan periode</h2><p class="muted">PDF A4 lanskap dengan desain formal minim warna. Setiap kamar mempunyai KOP surat sendiri dan tabel tahap yang rapi.</p></div><div class="report-icon">▤</div></div><form id="reportForm"><div class="field"><label for="reportPeriod">Pilih periode *</label><select id="reportPeriod" required><option value="">Pilih periode</option></select></div><p id="reportSummary" class="notice-box" role="status"></p><div class="report-includes"><strong>Isi laporan</strong><div>✓ Kop surat dapat diedit melalui Pengaturan</div><div>✓ Logo Laundry di kiri dan logo Dayah di kanan</div><div>✓ Berat dan jumlah pakaian pada setiap Tahap 1–8</div><div>✓ Satu kamar per halaman; kamar ramai dilanjutkan di halaman berikutnya</div><div>✓ Rekap jenjang → kamar → santri dalam satu PDF</div></div><div id="reportMessage" class="inline-message hidden" role="status"></div><button class="btn btn-primary btn-wide" type="submit">Buat dan unduh PDF <span>↓</span></button></form></article><aside class="panel helper-panel"><div class="helper-icon">▤</div><h3>Rekap otomatis</h3><p class="muted">Data dikelompokkan berdasarkan jenjang dan kamar yang tersimpan saat laundry dicatat. Perpindahan kamar di masa depan tidak mengubah riwayat lama.</p><div class="notice-box"><strong>Jumlah pakaian wajib diisi</strong><p>Setiap pencatatan baru harus memuat minimal 1 potong. Catatan lama yang belum memiliki jumlah pakaian akan ditandai dan tidak ikut dijumlahkan.</p></div></aside></div>
       </section>
 
       <section id="view-masalah" class="view-section hidden">
@@ -194,7 +151,7 @@
         </div>
 
         <div class="issue-layout">
-          <article class="panel form-panel issue-form-panel">
+          <article class="panel form-panel issue-form-panel issue-create-panel">
             <div class="panel-heading">
               <div><h2>Buat laporan baru</h2><p class="muted">Pilih santri dari saran agar jenjang dan kamar terisi otomatis.</p></div>
               <div class="issue-form-icon">✦</div>
@@ -281,7 +238,12 @@
         <article class="panel table-panel issue-history-panel">
           <div class="panel-heading issue-history-heading">
             <div><h2>Riwayat laporan masalah</h2><p class="muted">Ubah status setelah laporan ditangani. Daftar terbaru tampil paling atas.</p></div>
-            <div class="issue-history-controls">
+            <form id="issueFilters" class="issue-history-controls">
+              <select id="issueSearchField" aria-label="Cari berdasarkan"><option value="santri_nama_snapshot">Nama santri</option><option value="kamar_nama_snapshot">Kamar</option></select>
+              <input id="issueSearch" type="search" aria-label="Kata kunci" placeholder="Kata kunci">
+              <label>Dari <input id="issueFrom" type="date"></label>
+              <label>Sampai <input id="issueTo" type="date"></label>
+              <button class="btn btn-light btn-sm" type="submit">Cari</button>
               <select id="issueStatusFilter" aria-label="Filter status laporan">
                 <option value="">Semua status</option>
                 <option value="baru">Baru dilaporkan</option>
@@ -289,11 +251,14 @@
                 <option value="selesai">Selesai</option>
               </select>
               <button id="refreshIssueReportsBtn" class="btn btn-light btn-sm" type="button">↻ Muat ulang</button>
-            </div>
+            </form>
           </div>
           <div id="issueReportsList" class="issue-reports-list">
             <div class="empty-state">Buka halaman ini untuk memuat laporan masalah.</div>
           </div>
+          <div class="issue-pager"><button id="issuePrev" class="btn btn-light" type="button" disabled>Sebelumnya</button>
+            <span id="issuePageLabel" role="status"></span>
+            <button id="issueNext" class="btn btn-light" type="button" disabled>Berikutnya</button></div>
         </article>
       </section>
 
@@ -335,26 +300,17 @@
     </main>
   </div>
   <nav id="mobileBottomNav" class="mobile-bottom-nav" aria-label="Navigasi utama HP">
-    <button class="nav-item active" data-view="dashboard" aria-label="Dashboard" title="Dashboard"><span class="nav-icon">▦</span><span class="mobile-nav-label">Dashboard</span></button>
-    <button class="nav-item" data-view="santri" aria-label="Data santri" title="Data santri"><span class="nav-icon">♙</span><span class="mobile-nav-label">Santri</span></button>
-    <button class="nav-item" data-view="tahap" aria-label="Periode dan tahap" title="Periode & tahap"><span class="nav-icon">▣</span><span class="mobile-nav-label">Tahap</span></button>
-    <button class="nav-item mobile-nav-primary" data-view="input" aria-label="Input laundry" title="Input laundry"><span class="nav-icon">＋</span><span class="mobile-nav-label">INPUT</span></button>
+    <button class="nav-item active" data-view="dashboard" aria-label="Dashboard" title="Dashboard"><span class="nav-icon">▦</span><span class="mobile-nav-label">Beranda</span></button>
+    <button class="nav-item mobile-nav-primary" data-view="input" aria-label="Input laundry" title="Input laundry"><span class="nav-icon">＋</span><span class="mobile-nav-label">Catat</span></button>
     <button class="nav-item" data-view="masalah" aria-label="Laporan masalah" title="Laporan masalah"><span class="nav-icon">⚠</span><span class="mobile-nav-label">Masalah</span></button>
     <button class="nav-item" data-view="laporan" aria-label="Laporan laundry" title="Laporan laundry"><span class="nav-icon">▤</span><span class="mobile-nav-label">Laporan</span></button>
-    <button class="nav-item" data-view="pengaturan" aria-label="Pengaturan laporan" title="Pengaturan"><span class="nav-icon">⚙</span><span class="mobile-nav-label">Setelan</span></button>
+    <details id="mobileMore"><summary>Lainnya</summary><div class="mobile-more-menu">
+      <button class="nav-item" data-view="santri">Data santri</button>
+      <button class="nav-item" data-view="tahap">Periode &amp; tahap</button>
+      <button class="nav-item" data-view="pengaturan">Pengaturan</button>
+    </div></details>
   </nav>
-  <div id="dashboardDoorTransition" class="dashboard-door-transition hidden" aria-hidden="true">
-    <div class="dashboard-door-panel dashboard-door-left" aria-hidden="true"></div>
-    <div class="dashboard-door-panel dashboard-door-right" aria-hidden="true"></div>
-    <div class="dashboard-door-brand" aria-hidden="true">
-      <img src="./assets/logo-ruhul-qurani.png" alt="">
-      <strong>SILAS</strong>
-      <span>DAYAH RUHUL QUR’ANI</span>
-      <small lang="ja">誠実 · 奉仕 · 信頼</small>
-    </div>
-    <span class="dashboard-door-seam" aria-hidden="true"></span>
-  </div>
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
-  <script type="module" src="./app.js?v=silas-v12-kop-ulangan-halaman-lanjutan-20261108"></script>
+  <script type="module" src="./app.js?v=20261112-revisi"></script>
 </body>
 </html>

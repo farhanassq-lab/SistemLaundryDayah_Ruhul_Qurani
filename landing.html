@@ -10,24 +10,6 @@
   <link rel="stylesheet" href="./landing.css">
 </head>
 <body>
-  <div class="intro-screen" id="introScreen" aria-label="Pembuka SILAS">
-    <div class="intro-japanese-pattern" aria-hidden="true"></div>
-    <div class="intro-sun" aria-hidden="true"></div>
-    <div class="intro-orbit intro-orbit-one" aria-hidden="true"></div>
-    <div class="intro-orbit intro-orbit-two" aria-hidden="true"></div>
-    <div class="intro-emblem">
-      <span class="intro-emblem-ring" aria-hidden="true"></span>
-      <img src="./assets/landing/logo-ruhul-qurani.png" alt="Logo Dayah Ruhul Qur’ani">
-      <span class="intro-emblem-glint" aria-hidden="true"></span>
-    </div>
-    <span class="intro-kicker">DAYAH RUHUL QUR’ANI</span>
-    <h2 class="intro-title">Pelayanan Lebih Tertata</h2>
-    <p class="intro-subtitle">SILAS · Sistem Informasi Laundry Santri</p>
-    <span class="intro-japanese" lang="ja">誠実 · 丁寧 · 責任</span>
-    <div class="intro-loader" aria-hidden="true"><span></span></div>
-    <button class="intro-skip" id="skipIntro" type="button">Lewati pembuka <span aria-hidden="true">↗</span></button>
-  </div>
-  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
   <header class="site-header" id="siteHeader">
     <div class="header-inner">
       <a class="brand-lockup" href="#beranda" aria-label="SILAS — Beranda">
@@ -40,7 +22,7 @@
         <a class="nav-link active" href="#beranda">Beranda</a>
         <a class="nav-link" href="#fitur">Fitur</a>
         <a class="nav-link" href="#pratinjau">Pratinjau</a>
-        <a class="nav-link" href="#semangat">Nilai Dayah</a>
+        <a class="nav-link" href="#alur">Alur Laundry</a>
         <a class="nav-link" href="#pengembangan">Pengembangan</a>
         <a class="nav-link" href="#tentang">Tentang</a>
         <a class="nav-mobile-cta" href="./sistem.html">Masuk ke SILAS <span aria-hidden="true">↗</span></a>
@@ -71,8 +53,8 @@
           <h1 id="heroTitle">Sistem Informasi<br><em>Laundry Santri</em></h1>
           <p class="hero-description">SILAS menyatukan pencatatan data santri, input laundry, pengelolaan Tahap 1–8, dan pelaporan dalam alur kerja yang lebih jelas serta mudah ditelusuri.</p>
           <div class="hero-actions">
-            <a class="button button-gold" href="#fitur"><span aria-hidden="true">▦</span> Jelajahi Fitur <span class="button-arrow" aria-hidden="true">↘</span></a>
-            <a class="button button-glass" href="./sistem.html"><span aria-hidden="true">↗</span> Masuk Sistem</a>
+            <a class="button button-gold" href="./sistem.html"><span aria-hidden="true">↗</span> Masuk ke SILAS</a>
+            <a class="button button-glass" href="#fitur">Lihat fitur</a>
           </div>
           <div class="hero-assurances" aria-label="Keunggulan SILAS">
             <span><i aria-hidden="true">✓</i> Alur tertata</span>
@@ -217,36 +199,6 @@
       </div>
     </section>
 
-    <section class="section spirit-section" id="semangat" aria-labelledby="spiritTitle">
-      <div class="spirit-pattern spirit-pattern-left" aria-hidden="true"></div>
-      <div class="spirit-pattern spirit-pattern-right" aria-hidden="true"></div>
-      <div class="page-width spirit-layout">
-        <div class="spirit-copy reveal">
-          <span class="eyebrow"><span class="eyebrow-mark"></span> NILAI DI BALIK LAYANAN</span>
-          <h2 id="spiritTitle">Setiap catatan adalah bagian dari <em>amanah.</em></h2>
-          <p>Di lingkungan dayah, ketertiban bukan sekadar administrasi. Pencatatan yang rapi membantu pelayanan laundry santri lebih mudah ditinjau, dipahami, dan ditindaklanjuti.</p>
-          <div class="spirit-values">
-            <span><i aria-hidden="true">✦</i> Disiplin</span>
-            <span><i aria-hidden="true">✦</i> Tanggung jawab</span>
-            <span><i aria-hidden="true">✦</i> Pelayanan</span>
-          </div>
-          <div class="spirit-japanese" lang="ja" aria-label="Ketulusan, ketelitian, dan harmoni">
-            <span>誠</span><i>·</i><span>丁寧</span><i>·</i><span>和</span>
-            <small>SEIKAKU · TEINEI · WA</small>
-          </div>
-        </div>
-        <figure class="spirit-photo-frame reveal">
-          <span class="spirit-photo-ring" aria-hidden="true"></span>
-          <img src="./assets/landing/santri-ibadah.jpg" alt="Santri Dayah Ruhul Qur’ani berdiri dalam saf di dalam masjid" loading="lazy">
-          <figcaption>
-            <span class="spirit-caption-kicker">DAYAH RUHUL QUR’ANI</span>
-            <strong>Menjaga amanah dalam setiap pelayanan</strong>
-            <span class="spirit-caption-jp" lang="ja">共に、丁寧に。</span>
-          </figcaption>
-          <span class="spirit-photo-corner" aria-hidden="true"></span>
-        </figure>
-      </div>
-    </section>
 
     <section class="section vision-section" id="pengembangan" aria-labelledby="visionTitle">
       <div class="page-width vision-layout">

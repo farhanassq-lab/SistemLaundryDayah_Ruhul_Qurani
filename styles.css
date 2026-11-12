@@ -4237,3 +4237,60 @@ input, select, textarea { max-width: 100%; }
   .period-card-actions{width:100%;justify-content:space-between}
   .period-delete-btn{min-height:32px;padding:7px 10px}
 }
+
+/* SILAS operational layout */
+body.app-authenticated, .app-shell, .main-area { background: #f5f7fa; }
+.app-shell .btn-primary, .auth-form .btn-primary {
+  background: #142a45 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+.app-shell .btn-primary:hover, .auth-form .btn-primary:hover { background: #25476a !important; }
+.dashboard-overview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: clamp(18px, 4vw, 34px);
+  margin-bottom: 18px;
+  border: 1px solid #dce4ef;
+  border-left: 4px solid #c9a45c;
+  border-radius: 16px;
+  background: #fff;
+  color: #142a45;
+}
+.dashboard-overview h1 { margin: 4px 0 10px; font-size: clamp(24px, 5vw, 36px); }
+.dashboard-overview p { margin: 0; }
+#dashboardCurrentStage { display: block; color: #475569; margin-top: 4px; }
+#dashboardRooms .stage-row { flex-wrap: wrap; gap: 8px; }
+.issue-history-controls { flex-wrap: wrap; align-items: end; }
+.issue-history-controls input { min-height: 40px; max-width: 100%; }
+.issue-history-controls label { display: grid; gap: 3px; }
+.issue-pager { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; padding-top: 16px; }
+#mobileMore { position: relative; }
+#mobileMore summary { cursor: pointer; min-height: 44px; display: grid; place-items: center; color: #142a45; font-size: 12px; }
+.mobile-more-menu { position: absolute; right: 0; bottom: calc(100% + 10px); width: 174px; border: 1px solid #dce4ef; border-radius: 12px; padding: 6px; background: #fff; box-shadow: 0 6px 20px #142a4526; }
+body:not([data-role="admin"]) :is([data-view="pengaturan"], [data-issue-action="delete"]),
+body:not([data-role="admin"]):not([data-role="petugas"]) :is([data-view="input"],[data-view="santri"],[data-view="tahap"],[data-goto="input"],.issue-create-panel,.issue-status-control,[data-issue-action="status"],[data-issue-action="whatsapp"],#mobileMore) { display: none !important; }
+
+@media (max-width: 850px) {
+  body.app-authenticated #mobileBottomNav { grid-template-columns: repeat(5, minmax(0,1fr)) !important; }
+  body.app-authenticated[data-role="pimpinan"] #mobileBottomNav { grid-template-columns: repeat(3, minmax(0,1fr)) !important; }
+  .dashboard-overview { align-items: stretch; flex-direction: column; }
+  #view-input .input-layout { grid-template-columns: minmax(0,1fr); }
+  #view-input .form-row.two-col { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+  #view-input input, #view-input select { font-size: 16px; min-height: 44px; }
+  #view-input #saveLaundryBtn { min-height: 48px; }
+}
+.issue-detail { margin: 10px 0; }
+.issue-detail summary { cursor: pointer; padding: 10px 0; color: #142a45; font-weight: 600; }
+#view-input .input-layout { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 850px) {
+  #mobileBottomNav > .nav-item[data-view="input"] { grid-column: 2 !important; }
+  #mobileBottomNav > .nav-item[data-view="masalah"] { grid-column: 3 !important; }
+  #mobileBottomNav > .nav-item[data-view="laporan"] { grid-column: 4 !important; }
+  #mobileBottomNav > #mobileMore { grid-column: 5; grid-row: 1; }
+  body[data-role="pimpinan"] #mobileBottomNav > .nav-item[data-view="masalah"] { grid-column: 2 !important; }
+  body[data-role="pimpinan"] #mobileBottomNav > .nav-item[data-view="laporan"] { grid-column: 3 !important; }
+  #mobileBottomNav .mobile-more-menu .nav-item { min-height: 44px !important; }
+}

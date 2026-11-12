@@ -14,6 +14,7 @@ const $$ = (selector) => [...document.querySelectorAll(selector)];
 const state = {
   supabase: null, user: null, jenjang: [], kamar: [], santri: [], periods: [], stages: [],
   selectedStudent: null, editingStudentId: null, currentView: 'dashboard',
+  role: null, issuePage: 0, issueRequest: 0, dashboardRequest: 0,
   issueStudent: null, issueReports: [], issueTableReady: false, issuePhotoObjectUrl: null,
   reportSettings: { id: 1, nama_dayah: "Dayah Ruhul Qur’ani", alamat: '', kontak: '', judul_laporan: 'REKAPITULASI LAUNDRY SANTRI', logo_dayah_data: null, logo_laundry_data: null, nama_direktur: '', jabatan_direktur: 'Direktur Badan Usaha Dayah Ruhul Qur’ani', kata_direktur: 'Kebersihan dan kerapian adalah bagian dari pelayanan. Semoga setiap ikhtiar memudahkan santri dalam menuntut ilmu.', foto_direktur_data: null },
   defaultDayahLogoData: null,
@@ -250,6 +251,8 @@ function setBusy(button, busy, busyText = 'Memproses…') {
 function setView(view) {
   const validViews = ['dashboard', 'input', 'santri', 'tahap', 'laporan', 'masalah', 'pengaturan'];
   if (!validViews.includes(view)) view = 'dashboard';
+  if (!canOpen(view)) return;
+  $('#mobileMore').open = false;
   state.currentView = view;
   $$('.view-section').forEach(section => section.classList.toggle('hidden', section.id !== `view-${view}`));
   $$('.nav-item').forEach(item => {
@@ -262,11 +265,6 @@ function setView(view) {
   if (view === 'dashboard') renderDashboard();
   if (view === 'masalah') loadIssueReports();
 }
-function motionDelay(milliseconds) {
-  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  return new Promise(resolve => window.setTimeout(resolve, reduceMotion ? 70 : milliseconds));
-}
-
 function showAuth() {
   document.body.classList.remove('app-authenticated');
   const authScreen = $('#authScreen');
@@ -274,18 +272,7 @@ function showAuth() {
   $('#appShell').classList.add('hidden');
   $('#configWarning').classList.add('hidden');
 
-  const doorTransition = $('#dashboardDoorTransition');
-  if (doorTransition) {
-    doorTransition.classList.add('hidden');
-    doorTransition.classList.remove('is-opening');
-    doorTransition.setAttribute('aria-hidden', 'true');
-  }
-
-  if (!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-    void authScreen.offsetWidth;
-    authScreen.classList.add('is-door-opening');
-    window.setTimeout(() => authScreen.classList.remove('is-door-opening'), 2250);
-  }
+  delete document.body.dataset.role;
 }
 
 function showApp() {
@@ -295,124 +282,6 @@ function showApp() {
   $('#appShell').classList.remove('hidden');
   $('#userEmail').textContent = state.user?.email || 'Petugas';
   $('#configWarning').classList.add('hidden');
-}
-
-async function openDashboardWithDoors() {
-  const transition = $('#dashboardDoorTransition');
-  if (!transition) {
-    showApp();
-    return;
-  }
-
-  transition.classList.remove('hidden', 'is-opening');
-  transition.setAttribute('aria-hidden', 'false');
-  void transition.offsetWidth;
-
-  // Put the dashboard behind the closed doors, hold briefly, then reveal it slowly.
-  showApp();
-  await motionDelay(260);
-  transition.classList.add('is-opening');
-  await motionDelay(2110);
-
-  transition.classList.add('hidden');
-  transition.classList.remove('is-opening');
-  transition.setAttribute('aria-hidden', 'true');
-}
-
-
-
-
-async function playLoginPaperTear() {
-  const authScreen = $('#authScreen');
-  const form = $('#loginForm');
-  const panel = form?.parentElement;
-
-  if (!form || !panel) {
-    authScreen?.classList.add('is-tearing');
-    await motionDelay(2250);
-    authScreen?.classList.remove('is-tearing');
-    return;
-  }
-
-  panel.querySelector('.auth-tear-stage')?.remove();
-
-  const formRect = form.getBoundingClientRect();
-  const panelRect = panel.getBoundingClientRect();
-  const stage = document.createElement('div');
-  stage.className = 'auth-tear-stage';
-  stage.setAttribute('aria-hidden', 'true');
-  stage.style.left = `${formRect.left - panelRect.left}px`;
-  stage.style.top = `${formRect.top - panelRect.top}px`;
-  stage.style.width = `${formRect.width}px`;
-  stage.style.height = `${formRect.height}px`;
-
-  const originalInputs = [...form.querySelectorAll('input')];
-
-  function makeTornSheet(position) {
-    const sheet = form.cloneNode(true);
-    sheet.removeAttribute('id');
-    sheet.classList.remove('is-tearing-source');
-    sheet.classList.add('auth-tear-sheet', position);
-    sheet.setAttribute('aria-hidden', 'true');
-
-    sheet.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
-    sheet.querySelectorAll('[for]').forEach(node => node.removeAttribute('for'));
-    sheet.querySelectorAll('input').forEach((input, index) => {
-      input.value = originalInputs[index]?.value ?? '';
-      input.readOnly = true;
-      input.setAttribute('tabindex', '-1');
-      input.setAttribute('autocomplete', 'off');
-    });
-    sheet.querySelectorAll('button').forEach(button => {
-      button.disabled = true;
-      button.type = 'button';
-      button.setAttribute('tabindex', '-1');
-    });
-    sheet.querySelectorAll('a').forEach(link => link.removeAttribute('href'));
-    return sheet;
-  }
-
-  stage.appendChild(makeTornSheet('tear-top'));
-  stage.appendChild(makeTornSheet('tear-bottom'));
-
-  const seam = document.createElement('div');
-  seam.className = 'auth-tear-seam';
-  seam.setAttribute('aria-hidden', 'true');
-  stage.appendChild(seam);
-
-  const fragments = [
-    { left: '13%', x: '-42px', y: '-78px', rotate: '-58deg', delay: '.16s' },
-    { left: '27%', x: '-22px', y: '70px', rotate: '44deg', delay: '.24s' },
-    { left: '41%', x: '-10px', y: '-96px', rotate: '-72deg', delay: '.20s' },
-    { left: '57%', x: '18px', y: '86px', rotate: '62deg', delay: '.28s' },
-    { left: '72%', x: '28px', y: '-76px', rotate: '48deg', delay: '.22s' },
-    { left: '86%', x: '45px', y: '74px', rotate: '-48deg', delay: '.30s' }
-  ];
-
-  fragments.forEach((fragment, index) => {
-    const piece = document.createElement('span');
-    piece.className = `auth-tear-fragment auth-tear-fragment-${index + 1}`;
-    piece.setAttribute('aria-hidden', 'true');
-    piece.style.left = fragment.left;
-    piece.style.setProperty('--tear-x', fragment.x);
-    piece.style.setProperty('--tear-y', fragment.y);
-    piece.style.setProperty('--tear-rotate', fragment.rotate);
-    piece.style.setProperty('--tear-delay', fragment.delay);
-    stage.appendChild(piece);
-  });
-
-  panel.appendChild(stage);
-  form.classList.add('is-tearing-source');
-  authScreen.classList.add('is-tearing');
-  void stage.offsetWidth;
-  stage.classList.add('is-active');
-
-  // Keep the torn card visible long enough for the whole effect to be noticed.
-  await motionDelay(2320);
-
-  stage.remove();
-  form.classList.remove('is-tearing-source');
-  authScreen.classList.remove('is-tearing');
 }
 
 async function initializeSilasApp() {
@@ -431,13 +300,22 @@ async function initializeSilasApp() {
   state.supabase.auth.onAuthStateChange((_event, session) => {
     if (session?.user) {
       state.user = session.user;
-      // Login manual menjalankan animasi sobekan dan pintu melalui onLogin.
       if (state.loginTransitionInProgress) return;
       showApp();
       // Jalankan query setelah callback auth selesai untuk menghindari auth-lock.
       window.setTimeout(() => refreshAll(), 0);
     } else {
       state.user = null;
+      state.role = null;
+      state.dashboardRequest++;
+      state.issueRequest++;
+      state.santri = [];
+      state.periods = [];
+      state.stages = [];
+      state.issueReports = [];
+      state.selectedStudent = null;
+      state.issueStudent = null;
+      setView('dashboard');
       showAuth();
     }
   });
@@ -524,7 +402,22 @@ function wireEvents() {
     }, 0);
   });
   $('#issueReportsList').addEventListener('click', onIssueReportsAction);
-  $('#issueStatusFilter').addEventListener('change', renderIssueReports);
+  $('#issueFilters').addEventListener('submit', event => {
+    event.preventDefault();
+    state.issuePage = 0;
+    loadIssueReports();
+  });
+  $('#issueFilters').addEventListener('change', () => {
+    state.issuePage = 0;
+    loadIssueReports();
+  });
+  for (const [id, direction] of [['#issuePrev', -1], ['#issueNext', 1]]) {
+    $(id).addEventListener('click', () => {
+      state.issuePage = Math.max(0, state.issuePage + direction);
+      loadIssueReports();
+    });
+  }
+  $('#reportPeriod').addEventListener('change', previewReport);
   $('#refreshIssueReportsBtn').addEventListener('click', () => loadIssueReports());
   $('#issueDate').value = localDateInputValue();
   $('#reportSettingsForm').addEventListener('submit', onSaveReportSettings);
@@ -558,8 +451,7 @@ async function onLogin(event) {
     state.user = data.user;
     setBusy(button, false);
     $('#authScreen').classList.remove('is-door-opening');
-    await playLoginPaperTear();
-    await openDashboardWithDoors();
+    showApp();
     state.loginTransitionInProgress = false;
     await refreshAll();
   } catch (error) {
@@ -569,26 +461,46 @@ async function onLogin(event) {
   }
 }
 
+function canOpen(view) {
+  if (!state.role) return view === 'dashboard';
+  if (view === 'pengaturan') return state.role === 'admin';
+  return !['input', 'santri', 'tahap'].includes(view) || ['admin', 'petugas'].includes(state.role);
+}
+
+async function loadRole() {
+  const { data, error } = await state.supabase.rpc('silas_role');
+  if (error) throw error;
+  state.role = data;
+  document.body.dataset.role = data || 'unassigned';
+  if (!canOpen(state.currentView)) setView('dashboard');
+  if (!data) throw new Error('Akun ini belum diberi peran SILAS. Hubungi admin Dayah.');
+}
+
+async function readAll(buildQuery) {
+  const rows = [];
+  const pageSize = 200;
+  while (true) {
+    const { data, error } = await buildQuery().range(rows.length, rows.length + pageSize - 1);
+    if (error) throw error;
+    if (!data.length) return rows;
+    rows.push(...data);
+  }
+}
+
 async function refreshAll() {
   try {
     const sb = state.supabase;
-    const [levelsRes, roomsRes, studentsRes, periodsRes, stagesRes] = await Promise.all([
-      sb.from('jenjang').select('id,nama').order('nama'),
-      sb.from('kamar').select('id,nama,jenjang_id,jenjang(id,nama)').order('nama'),
-      sb.from('santri').select('id,nis,nama,kamar_id,status_aktif,created_at,kamar(id,nama,jenjang(id,nama))').order('nama'),
-      sb.from('periode_laundry').select('id,nomor_periode').order('nomor_periode', {ascending:false}),
-      sb.from('tahap_laundry').select('id,periode_id,nomor_tahap,tanggal_laundry,status').order('nomor_tahap')
+    await loadRole();
+    [state.jenjang, state.kamar, state.santri, state.periods, state.stages] = await Promise.all([
+      readAll(() => sb.from('jenjang').select('id,nama').order('nama').order('id')),
+      readAll(() => sb.from('kamar').select('id,nama,jenjang_id,jenjang(id,nama)').order('nama').order('id')),
+      readAll(() => sb.from('santri').select('id,nis,nama,kamar_id,status_aktif,created_at,kamar(id,nama,jenjang(id,nama))').order('nama').order('id')),
+      readAll(() => sb.from('periode_laundry').select('id,nomor_periode').order('nomor_periode', { ascending: false }).order('id')),
+      readAll(() => sb.from('tahap_laundry').select('id,periode_id,nomor_tahap,tanggal_laundry,status').order('nomor_tahap').order('id'))
     ]);
-    for (const res of [levelsRes, roomsRes, studentsRes, periodsRes, stagesRes]) {
-      if (res.error) throw res.error;
-    }
-    state.jenjang = levelsRes.data || [];
-    state.kamar = roomsRes.data || [];
-    state.santri = studentsRes.data || [];
-    state.periods = periodsRes.data || [];
-    state.stages = stagesRes.data || [];
     populateAllSelects();
     populateIssueStageOptions();
+    previewReport();
     renderStudents();
     renderPeriods();
     renderDashboard();
@@ -625,9 +537,9 @@ function populateStageSelect() {
   const periodId = $('#inputPeriod').value;
   const stages = state.stages.filter(stage => stage.periode_id === periodId).sort((a,b) => a.nomor_tahap - b.nomor_tahap);
   const oldValue = $('#inputStage').value;
-  $('#inputStage').innerHTML = `<option value="">Pilih tahap</option>${stages.map(stage => `<option value="${stage.id}">Tahap ${stage.nomor_tahap} · ${escapeHtml(shortDate(stage.tanggal_laundry))}</option>`).join('')}`;
+  $('#inputStage').innerHTML = `<option value="">Pilih tahap</option>${stages.map(stage => `<option value="${stage.id}">Tahap ${stage.nomor_tahap} · ${escapeHtml(shortDate(stage.tanggal_laundry))}${stage.status === 'selesai' ? ' · Ditutup' : ''}</option>`).join('')}`;
   if (oldValue && stages.some(stage => stage.id === oldValue)) $('#inputStage').value = oldValue;
-  else if (stages.length) $('#inputStage').value = stages[0].id;
+  else if (stages.length) $('#inputStage').value = (stages.find(stage => stage.status === 'proses') || stages.find(stage => stage.status !== 'selesai') || stages[0]).id;
   if (!stages.length) $('#stageRecordsBody').innerHTML = '<tr><td colspan="7" class="empty-cell">Belum ada tahap untuk periode ini. Buat tahap di menu Periode & tahap.</td></tr>'; 
 }
 
@@ -640,37 +552,33 @@ function populateRoomSelect(selectedRoomId = '') {
   if (selectedRoomId && rooms.some(room => String(room.id) === String(selectedRoomId))) select.value = String(selectedRoomId);
 }
 
-function renderDashboard() {
-  const activeStudents = state.santri.filter(student => student.status_aktif).length;
-  $('#statSantri').textContent = fmtInt.format(activeStudents);
-  $('#statKamar').textContent = fmtInt.format(state.kamar.length);
+async function renderDashboard() {
+  const request = ++state.dashboardRequest;
   const latest = state.periods[0];
+  const stages = state.stages.filter(stage => stage.periode_id === latest?.id);
+  const currentStage = stages.find(stage => stage.status === 'proses') || stages.find(stage => stage.status !== 'selesai');
   $('#statPeriodLabel').textContent = latest ? periodLabel(latest) : 'Belum ada periode';
-  if (!latest) {
-    $('#statKg').textContent = '0 kg';
-    $('#statTahap').textContent = '0';
-    $('#dashboardStages').innerHTML = '<div class="empty-state">Belum ada periode. Buat periode pertama di menu Periode & tahap.</div>';
-    return;
-  }
-  const stages = state.stages.filter(stage => stage.periode_id === latest.id).sort((a,b) => a.nomor_tahap - b.nomor_tahap);
+  $('#dashboardCurrentStage').textContent = currentStage ? `Tahap ${currentStage.nomor_tahap} · ${dateLabel(currentStage.tanggal_laundry)}` : 'Tidak ada tahap terbuka';
   $('#dashboardStages').innerHTML = stages.length ? stages.map(stage => {
-    const statusClass = stage.status === 'selesai' ? 'done' : stage.status === 'proses' ? 'progress' : '';
-    const statusText = stage.status === 'selesai' ? 'Selesai' : stage.status === 'proses' ? 'Sedang diinput' : 'Belum ditutup';
-    return `<div class="stage-row"><div class="stage-date-icon">${escapeHtml(shortDate(stage.tanggal_laundry))}</div><div class="stage-info"><strong>Tahap ${stage.nomor_tahap}</strong><small>${escapeHtml(dateLabel(stage.tanggal_laundry))}</small></div><span class="stage-status ${statusClass}">${statusText}</span></div>`;
-  }).join('') : '<div class="empty-state">Belum ada tahap untuk periode ini. Tambahkan tahap sesuai jadwal laundry.</div>';
-  const stageIds = stages.map(stage => stage.id);
-  if (!stageIds.length) {
-    $('#statKg').textContent = '0 kg';
-    $('#statTahap').textContent = '0';
+    const status = stage.status === 'selesai' ? 'Selesai' : stage.status === 'proses' ? 'Sedang dicatat' : 'Terbuka';
+    return `<div class="stage-row"><div class="stage-info"><strong>Tahap ${stage.nomor_tahap}</strong><small>${escapeHtml(dateLabel(stage.tanggal_laundry))}</small></div><span class="stage-status ${stage.status === 'selesai' ? 'done' : 'progress'}">${status}</span></div>`;
+  }).join('') : '<p class="empty-state">Belum ada tahap pada periode ini.</p>';
+  const metrics = ['#statSantri', '#statKg', '#statPieces', '#statIssues'];
+  metrics.forEach(selector => { $(selector).textContent = '—'; });
+  $('#dashboardRooms').textContent = 'Memuat rekap…';
+  const { data, error } = await state.supabase.rpc('silas_ringkasan', { p_periode_id: latest?.id || null });
+  if (request !== state.dashboardRequest) return;
+  if (error) {
+    $('#dashboardRooms').textContent = friendlyError(error);
     return;
   }
-  state.supabase.from('catatan_laundry').select('tahap_id,berat_kg').in('tahap_id', stageIds).then(({data,error}) => {
-    if (error) { console.warn(error); return; }
-    const rows = data || [];
-    const total = rows.reduce((sum,row) => sum + Number(row.berat_kg || 0), 0);
-    $('#statKg').textContent = `${fmt.format(total)} kg`;
-    $('#statTahap').textContent = String(new Set(rows.map(row => row.tahap_id)).size);
-  });
+  $('#statSantri').textContent = fmtInt.format(data.santri);
+  $('#statKg').textContent = `${fmt.format(data.kg)} kg`;
+  $('#statPieces').textContent = fmtInt.format(data.pakaian);
+  $('#statIssues').textContent = fmtInt.format(data.masalah);
+  $('#dashboardRooms').innerHTML = data.kamar.length ? data.kamar.map(room =>
+    `<div class="stage-row"><strong>${escapeHtml(room.jenjang)} · ${escapeHtml(room.kamar)}</strong><span>${fmtInt.format(room.santri)} santri · ${fmt.format(room.kg)} kg · ${fmtInt.format(room.pakaian)} potong</span></div>`
+  ).join('') : '<p class="empty-state">Belum ada catatan pada periode ini.</p>';
 }
 
 function onStudentSearch() {
@@ -717,6 +625,7 @@ async function onSaveLaundry(event) {
   if (!Number.isInteger(pieces) || pieces < 1 || pieces > 100000) return showMessage('#laundryMessage', 'Jumlah pakaian wajib diisi dengan bilangan bulat minimal 1 potong dan maksimal 100.000 potong.', 'error');
   const student = state.selectedStudent;
   const selectedStage = state.stages.find(stage => stage.id === stageId);
+  if (selectedStage?.status === 'selesai') return showMessage('#laundryMessage', 'Tahap sudah ditutup.', 'error');
   if (!selectedStage) return showMessage('#laundryMessage', 'Tahap tidak ditemukan. Muat ulang data dan coba lagi.', 'error');
   const payload = {
     tahap_id: stageId,
@@ -758,15 +667,16 @@ async function loadStageRecords() {
     return;
   }
   tbody.innerHTML = '<tr><td colspan="7" class="empty-cell">Memuat catatan…</td></tr>';
-  const { data, error } = await state.supabase.from('catatan_laundry').select('*').eq('tahap_id', stageId).order('created_at', {ascending:false});
+  const { data, error } = await state.supabase.from('catatan_laundry').select('*').eq('tahap_id', stageId).order('created_at', {ascending:false}).order('id').limit(20);
+  if ($('#inputStage').value !== stageId) return;
   if (error) {
     tbody.innerHTML = `<tr><td colspan="7" class="empty-cell">${escapeHtml(friendlyError(error))}</td></tr>`;
     return;
   }
   const rows = data || [];
   const totalKg = rows.reduce((sum,row) => sum + Number(row.berat_kg || 0), 0);
-  $('#stageTotals').textContent = `${rows.length} catatan · ${fmt.format(totalKg)} kg`;
-  tbody.innerHTML = rows.length ? rows.map(row => `<tr><td><div class="person-cell"><span class="mini-avatar">${escapeHtml(initials(row.santri_nama_snapshot))}</span><span><strong>${escapeHtml(row.santri_nama_snapshot)}</strong></span></div></td><td>${escapeHtml(row.jenjang_nama_snapshot)}</td><td>${escapeHtml(row.kamar_nama_snapshot)}</td><td><strong>${fmt.format(Number(row.berat_kg))} kg</strong></td><td>${row.jumlah_pakaian === null ? '<span class="muted">—</span>' : fmtInt.format(row.jumlah_pakaian)}</td><td>${escapeHtml(new Date(row.created_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}))}</td><td><button type="button" class="text-btn danger" data-delete-record="${escapeHtml(row.id)}" data-record-name="${escapeHtml(row.santri_nama_snapshot)}">Hapus</button></td></tr>`).join('') : '<tr><td colspan="7" class="empty-cell">Belum ada catatan untuk tahap ini.</td></tr>';
+  $('#stageTotals').textContent = `${rows.length} catatan terbaru · ${fmt.format(totalKg)} kg`;
+  tbody.innerHTML = rows.length ? rows.map(row => `<tr><td><div class="person-cell"><span class="mini-avatar">${escapeHtml(initials(row.santri_nama_snapshot))}</span><span><strong>${escapeHtml(row.santri_nama_snapshot)}</strong></span></div></td><td>${escapeHtml(row.jenjang_nama_snapshot)}</td><td>${escapeHtml(row.kamar_nama_snapshot)}</td><td><strong>${fmt.format(Number(row.berat_kg))} kg</strong></td><td>${row.jumlah_pakaian === null ? '<span class="muted">—</span>' : fmtInt.format(row.jumlah_pakaian)}</td><td>${escapeHtml(new Date(row.created_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}))}</td><td>${state.role === 'admin' ? `<button type="button" class="text-btn danger" data-delete-record="${escapeHtml(row.id)}" data-record-name="${escapeHtml(row.santri_nama_snapshot)}">Hapus</button>` : '—'}</td></tr>`).join('') : '<tr><td colspan="7" class="empty-cell">Belum ada catatan untuk tahap ini.</td></tr>';
 }
 
 async function onLaundryRecordAction(event) {
@@ -877,13 +787,18 @@ async function onCreatePeriod(event) {
   setBusy(button, true, 'Membuat…');
   const { data, error } = await state.supabase.from('periode_laundry').insert({nomor_periode}).select().single();
   setBusy(button, false);
-  if (error) return showMessage('#periodMessage', `${friendlyError(error)}. Pastikan script migrasi periode SILAS sudah dijalankan di Supabase SQL Editor.`, 'error');
+  if (error?.code === '23505') {
+    await refreshAll();
+    return showMessage('#periodMessage', 'Nomor periode baru saja dipakai. Daftar diperbarui, silakan buat periode lagi.', 'error');
+  }
+  if (error) return showMessage('#periodMessage', friendlyError(error), 'error');
   showMessage('#periodMessage', `${periodLabel(data)} berhasil dibuat. Selanjutnya tambahkan tahap yang diperlukan (1–8).`, 'success');
   showToast(`${periodLabel(data)} berhasil dibuat.`, 'success', 'Periode dibuat');
   await refreshAll();
   $('#stagePeriod').value = data.id;
   $('#inputPeriod').value = data.id;
   $('#reportPeriod').value = data.id;
+  previewReport();
   populateStageSelect();
   $('#nextPeriodPreview').textContent = nextPeriodNumber();
 }
@@ -997,7 +912,7 @@ function renderPeriods() {
           <small>${stages.length} dari 8 tahap dibuat</small>
         </div>
         <div class="period-card-actions">
-          <span class="pill ${stages.length ? 'pill-blue' : ''}">${stages.length}/8 tahap</span><button type="button" class="period-delete-btn" data-delete-period="${escapeHtml(period.id)}" aria-label="Hapus ${escapeHtml(periodLabel(period))}">Hapus periode</button>
+          <span class="pill ${stages.length ? 'pill-blue' : ''}">${stages.length}/8 tahap</span>
         </div>
       </div>
       <div class="period-stages">
@@ -1007,7 +922,7 @@ function renderPeriods() {
             <strong>Tahap ${idx + 1}</strong>
             <small>${stage ? escapeHtml(dateLabel(stage.tanggal_laundry)) : 'Belum dibuat'}</small>
             <small>${stage ? (stage.status === 'selesai' ? 'Selesai' : stage.status === 'proses' ? 'Sedang diinput' : 'Belum ditutup') : '—'}</small>
-            ${stage ? `<button type="button" class="stage-delete-btn" data-delete-stage="${escapeHtml(stage.id)}" aria-label="Hapus Tahap ${idx + 1}">Hapus tahap</button>` : ''}
+            ${stage && stage.status !== 'selesai' ? `<button type="button" class="stage-delete-btn" data-close-stage="${escapeHtml(stage.id)}">Tutup tahap</button>` : ''}
           </div>`;
         }).join('')}
       </div>
@@ -1016,94 +931,17 @@ function renderPeriods() {
 }
 
 async function onPeriodListAction(event) {
-  const deletePeriodButton = event.target.closest('[data-delete-period]');
-  if (deletePeriodButton) {
-    await onDeletePeriod(deletePeriodButton);
-    return;
-  }
-
-  const button = event.target.closest('[data-delete-stage]');
-  if (!button) return;
-
-  const stageId = button.dataset.deleteStage;
-  const stage = state.stages.find(item => item.id === stageId);
-  if (!stage) return;
-
-  const period = state.periods.find(item => item.id === stage.periode_id);
-  const label = `${periodLabel(period)} · Tahap ${stage.nomor_tahap}`;
-  const confirmed = window.confirm(
-    `Hapus ${label}? Semua catatan laundry pada tahap ini juga akan dihapus dan tidak bisa dipulihkan. Pastikan laporan yang diperlukan sudah diunduh.`
-  );
-  if (!confirmed) return;
-
-  setBusy(button, true, 'Menghapus…');
+  const button = event.target.closest('[data-close-stage]');
+  if (!button || !window.confirm('Tutup tahap ini? Catatan tetap tersedia di laporan.')) return;
+  setBusy(button, true, 'Menutup…');
   try {
-    const { error: recordsError } = await state.supabase
-      .from('catatan_laundry')
-      .delete()
-      .eq('tahap_id', stageId);
-    if (recordsError) throw recordsError;
-
-    const { error: stageError } = await state.supabase
-      .from('tahap_laundry')
-      .delete()
-      .eq('id', stageId);
-    if (stageError) throw stageError;
-
-    showToast(`${label} berhasil dihapus.`, 'success', 'Tahap dihapus');
+    const { data, error } = await state.supabase.from('tahap_laundry')
+      .update({ status: 'selesai' }).eq('id', button.dataset.closeStage).select('id').single();
+    if (error) throw error;
+    if (data) showToast('Tahap ditutup.', 'success');
     await refreshAll();
   } catch (error) {
-    console.error(error);
-    showToast(`Tahap belum berhasil dihapus: ${friendlyError(error)}`, 'error', 'Gagal menghapus tahap');
-  } finally {
-    setBusy(button, false);
-  }
-}
-
-async function onDeletePeriod(button) {
-  const periodId = button.dataset.deletePeriod;
-  const period = state.periods.find(item => item.id === periodId);
-  if (!period) return;
-
-  const stages = state.stages.filter(item => item.periode_id === periodId);
-  const label = periodLabel(period);
-  const confirmed = window.confirm(
-    `PERINGATAN: Hapus ${label} secara permanen?\n\n` +
-    `• ${stages.length} tahap yang ada di periode ini akan dihapus.\n` +
-    `• Semua catatan laundry pada tahap-tahap tersebut ikut dihapus.\n` +
-    `• Laporan masalah tetap disimpan, tetapi kaitannya dengan tahap yang dihapus akan dilepas.\n\n` +
-    `Tindakan ini tidak dapat dibatalkan. Unduh PDF terlebih dahulu jika masih dibutuhkan.`
-  );
-  if (!confirmed) return;
-
-  setBusy(button, true, 'Menghapus…');
-  try {
-    const { data, error } = await state.supabase.rpc('silas_hapus_periode', {
-      p_periode_id: periodId
-    });
-
-    if (error) {
-      if (error.code === '42883' || /function .*silas_hapus_periode.* does not exist/i.test(error.message || '')) {
-        throw new Error('Fungsi hapus periode belum dipasang. Jalankan file sql/06_urutkan_periode_setelah_hapus.sql di Supabase SQL Editor, lalu coba lagi.');
-      }
-      throw error;
-    }
-
-    const result = Array.isArray(data) ? data[0] : data;
-    const deletedRecords = Number(result?.catatan_dihapus || 0);
-    const deletedStages = Number(result?.tahap_dihapus || stages.length);
-    const renumberedPeriods = Number(result?.periode_digeser || 0);
-
-    showToast(
-      `${label} dihapus. ${deletedStages} tahap dan ${fmtInt.format(deletedRecords)} catatan laundry ikut dihapus. ${renumberedPeriods} periode yang tersisa telah disusun ulang mulai dari Periode 1.`,
-      'success',
-      'Periode dihapus & urutan diperbarui'
-    );
-
-    await refreshAll();
-  } catch (error) {
-    console.error(error);
-    showToast(`Periode belum berhasil dihapus: ${friendlyError(error)}`, 'error', 'Gagal menghapus periode');
+    showToast(friendlyError(error), 'error');
   } finally {
     setBusy(button, false);
   }
@@ -1313,9 +1151,9 @@ async function onSaveIssueReport(event) {
       if (removeError) console.warn('Foto sementara gagal dibersihkan:', removeError);
     }
     const message = /relation .* does not exist|could not find the table|schema cache/i.test(error?.message || '')
-      ? 'Tabel laporan masalah belum tersedia. Jalankan file SQL migration SILAS_Laporan_Masalah.sql di Supabase SQL Editor terlebih dahulu.'
+      ? 'Tabel laporan masalah belum tersedia. Jalankan file SQL migration sql/05_laporan_masalah.sql di Supabase SQL Editor terlebih dahulu.'
       : /bucket not found|not found/i.test(error?.message || '')
-        ? 'Bucket foto belum tersedia. Jalankan file SQL migration SILAS_Laporan_Masalah.sql di Supabase SQL Editor.'
+        ? 'Bucket foto belum tersedia. Jalankan file SQL migration sql/05_laporan_masalah.sql di Supabase SQL Editor.'
         : friendlyError(error);
     showMessage('#issueMessage', message, 'error');
   } finally {
@@ -1328,18 +1166,46 @@ async function loadIssueReports({ silent = false } = {}) {
   const container = $('#issueReportsList');
   if (!container) return;
   container.innerHTML = '<div class="empty-state">Memuat laporan masalah…</div>';
-  const { data, error } = await state.supabase
-    .from('laporan_masalah_laundry')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(100);
+  const request = ++state.issueRequest;
+  const pageSize = 20;
+  const offset = state.issuePage * pageSize;
+  const filter = $('#issueStatusFilter').value;
+  const search = $('#issueSearch').value.trim().replace(/[%_*]/g, '');
+  const from = $('#issueFrom').value;
+  const to = $('#issueTo').value;
+  $('#issuePrev').disabled = true;
+  $('#issueNext').disabled = true;
+  let query = state.supabase.from('laporan_masalah_laundry').select('*', { count: 'exact' });
+  if (filter) query = query.eq('status', filter);
+  if (search) query = query.ilike($('#issueSearchField').value, `%${search}%`);
+  if (from) query = query.gte('tanggal_ditemukan', from);
+  if (to) query = query.lte('tanggal_ditemukan', to);
+  $('#issuePageLabel').textContent = '';
+  if (from && to && from > to) {
+    container.textContent = 'Tanggal awal harus sebelum atau sama dengan tanggal akhir.';
+    return;
+  }
+  const { data, count, error } = await query.order('created_at', { ascending: false })
+    .order('id').range(offset, offset + pageSize - 1);
+  if (request !== state.issueRequest) return;
+  if (offset && error?.code === 'PGRST103') {
+    state.issuePage = 0;
+    return loadIssueReports({ silent });
+  }
   if (error) {
     state.issueTableReady = false;
     const missing = /relation .* does not exist|could not find the table|schema cache/i.test(error.message || '');
-    container.innerHTML = `<div class="empty-state issue-load-error"><strong>${missing ? 'Modul database belum diaktifkan.' : 'Laporan belum dapat dimuat.'}</strong><p>${missing ? 'Jalankan file SQL migration SILAS_Laporan_Masalah.sql di Supabase → SQL Editor, lalu muat ulang halaman ini.' : escapeHtml(friendlyError(error))}</p></div>`;
+    container.innerHTML = `<div class="empty-state issue-load-error"><strong>${missing ? 'Modul database belum diaktifkan.' : 'Laporan belum dapat dimuat.'}</strong><p>${missing ? 'Jalankan file SQL migration sql/05_laporan_masalah.sql di Supabase → SQL Editor, lalu muat ulang halaman ini.' : escapeHtml(friendlyError(error))}</p></div>`;
     if (!silent) showToast(missing ? 'Jalankan SQL migration modul Laporan Masalah terlebih dahulu.' : friendlyError(error), 'error');
     return;
   }
+  if (offset && offset >= count) {
+    state.issuePage = Math.max(0, Math.ceil(count / pageSize) - 1);
+    return loadIssueReports({ silent });
+  }
+  $('#issuePrev').disabled = state.issuePage === 0;
+  $('#issueNext').disabled = offset + pageSize >= count;
+  $('#issuePageLabel').textContent = count ? `${offset + 1}–${offset + data.length} dari ${count}` : '0 laporan';
   state.issueTableReady = true;
   state.issueReports = data || [];
   await renderIssueReports();
@@ -1348,8 +1214,8 @@ async function loadIssueReports({ silent = false } = {}) {
 async function renderIssueReports() {
   const container = $('#issueReportsList');
   if (!container) return;
-  const filter = $('#issueStatusFilter')?.value || '';
-  const rows = state.issueReports.filter(item => !filter || item.status === filter);
+  const request = state.issueRequest;
+  const rows = state.issueReports;
   if (!rows.length) {
     container.innerHTML = `<div class="empty-state">${state.issueTableReady ? 'Belum ada laporan pada filter ini.' : 'Buka halaman ini untuk memuat laporan masalah.'}</div>`;
     return;
@@ -1377,13 +1243,13 @@ async function renderIssueReports() {
           <div class="issue-report-identity"><strong>${escapeHtml(issue.santri_nama_snapshot)}</strong><small>${escapeHtml(issue.jenjang_nama_snapshot || '-')} · Kamar ${escapeHtml(issue.kamar_nama_snapshot || '-')}</small></div>
           <div class="issue-report-date">${escapeHtml(dateLabel(issue.tanggal_ditemukan))}</div>
         </div>
-        <div class="issue-report-details">
+        <details class="issue-detail"><summary>Lihat detail dan foto</summary><div class="issue-report-details">
           <div><small>Pakaian</small><strong>${escapeHtml(issue.nama_pakaian)}</strong></div>
           <div><small>Jumlah</small><strong>${fmtInt.format(Number(issue.jumlah_pakaian || 0))} potong</strong></div>
           <div class="wide"><small>Tahap</small><strong>${escapeHtml(stageLabel)}</strong></div>
           <div class="wide"><small>Keterangan</small><p>${escapeHtml(issue.deskripsi)}</p></div>
         </div>
-        ${photoUrl ? `<a class="issue-photo-link" href="${escapeHtml(photoUrl)}" target="_blank" rel="noopener noreferrer"><img class="issue-photo-thumb" src="${escapeHtml(photoUrl)}" alt="Foto bukti laporan"><span>↗ Lihat foto bukti</span></a>` : '<div class="issue-no-photo">Foto bukti tidak dilampirkan</div>'}
+        ${photoUrl ? `<a class="issue-photo-link" href="${escapeHtml(photoUrl)}" target="_blank" rel="noopener noreferrer"><img class="issue-photo-thumb" src="${escapeHtml(photoUrl)}" alt="Foto bukti laporan" loading="lazy"><span>↗ Lihat foto bukti</span></a>` : '<div class="issue-no-photo">Foto bukti tidak dilampirkan</div>'}</details>
         <div class="issue-report-actions">
           <label class="issue-status-control"><span>Status tindak lanjut</span><select class="issue-status-select" aria-label="Status tindak lanjut">${statusOptions}</select></label>
           <button class="btn btn-light btn-sm" type="button" data-issue-action="status" data-issue-id="${escapeHtml(issue.id)}">Simpan status</button>
@@ -1392,6 +1258,7 @@ async function renderIssueReports() {
         </div>
       </article>`;
   }));
+  if (request !== state.issueRequest) return;
   container.innerHTML = cards.join('');
 }
 
@@ -1621,12 +1488,24 @@ async function onIssueReportsAction(event) {
       resolved_at: status === 'selesai' ? now : null,
       resolved_by: status === 'selesai' ? state.user?.id || null : null
     };
-    const { error } = await state.supabase.from('laporan_masalah_laundry').update(payload).eq('id', issueId);
+    const { error } = await state.supabase.from('laporan_masalah_laundry').update(payload).eq('id', issueId).select('id').single();
     setBusy(button, false);
     if (error) return showToast(`Status belum berhasil disimpan: ${friendlyError(error)}`, 'error');
     showToast(`Status laporan diperbarui: ${ISSUE_STATUS_LABELS[status]}.`, 'success');
     await loadIssueReports({ silent: true });
   }
+}
+
+async function previewReport() {
+  const periodId = $('#reportPeriod').value;
+  const summary = $('#reportSummary');
+  if (!periodId) { summary.textContent = 'Pilih periode untuk melihat cakupan laporan.'; return; }
+  const stages = state.stages.filter(stage => stage.periode_id === periodId);
+  summary.textContent = 'Memuat ringkasan…';
+  const { data, error } = await state.supabase.rpc('silas_ringkasan', { p_periode_id: periodId });
+  if ($('#reportPeriod').value !== periodId) return;
+  summary.textContent = error ? friendlyError(error) :
+    `${stages.length} tahap terjadwal · ${data.kamar.length} kelompok kamar · ${data.santri} santri tercatat · ${fmt.format(data.kg)} kg`;
 }
 
 async function onGenerateReport(event) {
@@ -1642,9 +1521,8 @@ async function onGenerateReport(event) {
     const stageIds = stages.map(stage => stage.id);
     let records = [];
     if (stageIds.length) {
-      const { data, error } = await state.supabase.from('catatan_laundry').select('*').in('tahap_id', stageIds).order('santri_nama_snapshot');
-      if (error) throw error;
-      records = data || [];
+      records = await readAll(() => state.supabase.from('catatan_laundry').select('*')
+        .in('tahap_id', stageIds).order('santri_nama_snapshot').order('id'));
     }
     await createMonthlyPdf(period, stages, records);
     showMessage('#reportMessage', 'PDF lanskap berhasil dibuat dan diunduh.', 'success');
@@ -2109,7 +1987,7 @@ function renderDirectorPhotoPreview() {
   const container = $('#directorPhotoPreview');
   if (!container) return;
   container.innerHTML = state.reportSettings.foto_direktur_data
-    ? `<img src="${state.reportSettings.foto_direktur_data}" alt="Pratinjau foto direktur">`
+    ? `<img src="${escapeHtml(state.reportSettings.foto_direktur_data)}" alt="Pratinjau foto direktur">`
     : directorPlaceholderMarkup('Unggah foto direktur');
 }
 
