@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#172554">
   <meta name="description" content="SILAS — Sistem Informasi Laundry Santri Dayah">
   <title>SILAS — Laundry Santri Dayah</title>
@@ -299,18 +299,18 @@
       <footer class="app-footer"><span>SILAS · Sistem Informasi Laundry Santri</span><span>Data tersimpan di Supabase</span></footer>
     </main>
   </div>
-  <nav id="mobileBottomNav" class="mobile-bottom-nav" aria-label="Navigasi utama HP">
-    <button class="nav-item active" data-view="dashboard" aria-label="Dashboard" title="Dashboard"><span class="nav-icon">▦</span><span class="mobile-nav-label">Beranda</span></button>
-    <button class="nav-item mobile-nav-primary" data-view="input" aria-label="Input laundry" title="Input laundry"><span class="nav-icon">＋</span><span class="mobile-nav-label">Catat</span></button>
-    <button class="nav-item" data-view="masalah" aria-label="Laporan masalah" title="Laporan masalah"><span class="nav-icon">⚠</span><span class="mobile-nav-label">Masalah</span></button>
-    <button class="nav-item" data-view="laporan" aria-label="Laporan laundry" title="Laporan laundry"><span class="nav-icon">▤</span><span class="mobile-nav-label">Laporan</span></button>
-    <details id="mobileMore"><summary>Lainnya</summary><div class="mobile-more-menu">
+  <nav id="mobileTabBar" class="mobile-tab-bar" aria-label="Navigasi utama HP">
+    <button class="nav-item active" aria-current="page" data-view="dashboard" aria-label="Dashboard" title="Dashboard"><span class="tab-icon" aria-hidden="true">▦</span><span class="tab-label">Beranda</span></button>
+    <button class="nav-item" data-view="input" aria-label="Input laundry" title="Input laundry"><span class="tab-icon" aria-hidden="true">＋</span><span class="tab-label">Catat</span></button>
+    <button class="nav-item" data-view="masalah" aria-label="Laporan masalah" title="Laporan masalah"><span class="tab-icon" aria-hidden="true">⚠</span><span class="tab-label">Masalah</span></button>
+    <button class="nav-item" data-view="laporan" aria-label="Laporan laundry" title="Laporan laundry"><span class="tab-icon" aria-hidden="true">▤</span><span class="tab-label">Laporan</span></button>
+    <details id="mobileMore"><summary><span class="tab-icon" aria-hidden="true">⋯</span><span class="tab-label">Lainnya</span></summary><div class="mobile-more-menu">
       <button class="nav-item" data-view="santri">Data santri</button>
       <button class="nav-item" data-view="tahap">Periode &amp; tahap</button>
       <button class="nav-item" data-view="pengaturan">Pengaturan</button>
     </div></details>
   </nav>
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
-  <script type="module" src="./app.js?v=20261112-revisi"></script>
+  <script type="module" src="./app.js?v=20261114-menu-hp"></script>
 </body>
 </html>

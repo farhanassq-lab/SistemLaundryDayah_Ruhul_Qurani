@@ -256,8 +256,13 @@ function setView(view) {
   state.currentView = view;
   $$('.view-section').forEach(section => section.classList.toggle('hidden', section.id !== `view-${view}`));
   $$('.nav-item').forEach(item => {
-    item.classList.toggle('active', item.dataset.view === view);
+    const active = item.dataset.view === view;
+    item.classList.toggle('active', active);
+    if (active) item.setAttribute('aria-current', 'page');
+    else item.removeAttribute('aria-current');
   });
+  $('#mobileMore').classList.toggle('has-current', Boolean($('#mobileMore .nav-item.active')));
+  window.scrollTo(0, 0);
   const names = {dashboard:'Dashboard', input:'Input laundry', santri:'Data santri', tahap:'Periode & tahap', laporan:'Laporan', masalah:'Laporan masalah', pengaturan:'Pengaturan laporan'};
   $('#pageBreadcrumb').textContent = names[view] || 'Dashboard';
   $('#sidebar')?.classList.remove('open');
@@ -327,6 +332,15 @@ function wireEvents() {
     const { error } = await state.supabase.auth.signOut();
     if (error) showToast(friendlyError(error), 'error');
     else showToast('Kamu sudah keluar.', 'success');
+  });
+  const mobileMore = $('#mobileMore');
+  document.addEventListener('click', event => {
+    if (mobileMore.open && !mobileMore.contains(event.target)) mobileMore.open = false;
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || !mobileMore.open) return;
+    mobileMore.open = false;
+    mobileMore.querySelector('summary').focus();
   });
   $$('.nav-item').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
   $$('[data-goto]').forEach(button => button.addEventListener('click', () => setView(button.dataset.goto)));

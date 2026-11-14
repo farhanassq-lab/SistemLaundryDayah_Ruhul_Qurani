@@ -4267,15 +4267,10 @@ body.app-authenticated, .app-shell, .main-area { background: #f5f7fa; }
 .issue-history-controls input { min-height: 40px; max-width: 100%; }
 .issue-history-controls label { display: grid; gap: 3px; }
 .issue-pager { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; padding-top: 16px; }
-#mobileMore { position: relative; }
-#mobileMore summary { cursor: pointer; min-height: 44px; display: grid; place-items: center; color: #142a45; font-size: 12px; }
-.mobile-more-menu { position: absolute; right: 0; bottom: calc(100% + 10px); width: 174px; border: 1px solid #dce4ef; border-radius: 12px; padding: 6px; background: #fff; box-shadow: 0 6px 20px #142a4526; }
 body:not([data-role="admin"]) :is([data-view="pengaturan"], [data-issue-action="delete"]),
 body:not([data-role="admin"]):not([data-role="petugas"]) :is([data-view="input"],[data-view="santri"],[data-view="tahap"],[data-goto="input"],.issue-create-panel,.issue-status-control,[data-issue-action="status"],[data-issue-action="whatsapp"],#mobileMore) { display: none !important; }
 
 @media (max-width: 850px) {
-  body.app-authenticated #mobileBottomNav { grid-template-columns: repeat(5, minmax(0,1fr)) !important; }
-  body.app-authenticated[data-role="pimpinan"] #mobileBottomNav { grid-template-columns: repeat(3, minmax(0,1fr)) !important; }
   .dashboard-overview { align-items: stretch; flex-direction: column; }
   #view-input .input-layout { grid-template-columns: minmax(0,1fr); }
   #view-input .form-row.two-col { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
@@ -4286,11 +4281,100 @@ body:not([data-role="admin"]):not([data-role="petugas"]) :is([data-view="input"]
 .issue-detail summary { cursor: pointer; padding: 10px 0; color: #142a45; font-weight: 600; }
 #view-input .input-layout { grid-template-columns: minmax(0, 1fr); }
 @media (max-width: 850px) {
-  #mobileBottomNav > .nav-item[data-view="input"] { grid-column: 2 !important; }
-  #mobileBottomNav > .nav-item[data-view="masalah"] { grid-column: 3 !important; }
-  #mobileBottomNav > .nav-item[data-view="laporan"] { grid-column: 4 !important; }
-  #mobileBottomNav > #mobileMore { grid-column: 5; grid-row: 1; }
-  body[data-role="pimpinan"] #mobileBottomNav > .nav-item[data-view="masalah"] { grid-column: 2 !important; }
-  body[data-role="pimpinan"] #mobileBottomNav > .nav-item[data-view="laporan"] { grid-column: 3 !important; }
-  #mobileBottomNav .mobile-more-menu .nav-item { min-height: 44px !important; }
+}
+
+.mobile-tab-bar { display: none; }
+
+@media (max-width: 850px) {
+  body { padding-bottom: 0 !important; }
+  body.app-authenticated {
+    --silas-tab-height: calc(54px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: var(--silas-tab-height) !important;
+  }
+  body.app-authenticated .mobile-tab-bar {
+    position: fixed;
+    z-index: 35;
+    inset: auto 0 0;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    height: var(--silas-tab-height);
+    padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    border-top: 1px solid #dce4ef;
+    background: #fff;
+  }
+  #mobileTabBar > .nav-item,
+  #mobileTabBar summary {
+    position: relative;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 2px;
+    width: 100%;
+    height: 53px;
+    padding: 3px 2px;
+    border: 0;
+    border-radius: 0;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #526479 !important;
+    cursor: pointer;
+    list-style: none;
+    transform: none !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #mobileTabBar summary::-webkit-details-marker { display: none; }
+  #mobileTabBar > .nav-item::after { content: none; }
+  #mobileTabBar .tab-icon {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 24px;
+    border-radius: 7px;
+    font-size: 20px;
+    line-height: 1;
+    transition: transform 140ms ease, background-color 160ms ease;
+  }
+  #mobileTabBar .tab-label { font-size: 11px; font-weight: 650; line-height: 15px; }
+  #mobileTabBar [data-view="input"] .tab-icon { color: #fff; background: #142a45; }
+  #mobileTabBar > .active .tab-label,
+  #mobileMore:is([open], .has-current) .tab-label { color: #142a45; }
+  #mobileTabBar > .active .tab-icon:not([data-view="input"] .tab-icon),
+  #mobileMore:is([open], .has-current) .tab-icon { background: #f5ead3; color: #142a45; }
+  #mobileTabBar > .active::before, #mobileMore.has-current summary::before {
+    content: "";
+    position: absolute;
+    inset: 0 29% auto;
+    height: 2px;
+    background: #b99048;
+    animation: tab-indicator 180ms ease-out both;
+  }
+  #mobileTabBar :is(button, summary):active .tab-icon { transform: scale(.88); }
+  #mobileTabBar :is(button, summary):focus-visible { outline: 2px solid #3262a0; outline-offset: -3px; }
+  #mobileMore { min-width: 0; }
+  .mobile-more-menu {
+    position: absolute;
+    inset: auto 0 100%;
+    padding: 4px 10px;
+    border-top: 1px solid #dce4ef;
+    background: #fff;
+    box-shadow: 0 -5px 15px #142a4512;
+    animation: tab-menu-in 160ms ease-out both;
+  }
+  #mobileTabBar .mobile-more-menu .nav-item {
+    min-height: 44px;
+    color: #142a45 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+  #mobileTabBar .mobile-more-menu .active { background: #f5ead3 !important; }
+}
+
+@keyframes tab-indicator { from { opacity: 0; transform: scaleX(.4); } }
+@keyframes tab-menu-in { from { opacity: 0; transform: translateY(5px); } }
+@media (prefers-reduced-motion: reduce) {
+  #mobileTabBar *, #mobileTabBar *::before { animation: none !important; transition: none !important; }
+}
+@media (max-width: 850px) {
+  body.app-authenticated #toastContainer { bottom: calc(var(--silas-tab-height) + 8px) !important; }
 }

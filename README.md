@@ -38,3 +38,7 @@ Tahap yang ditutup tetap tersedia di PDF. Penghapusan tahap dan periode dinonakt
 - Buat laporan masalah dengan foto. Periksa filter nama, kamar, tanggal, status, dan halaman berikutnya.
 - Cocokkan ringkasan periode dan PDF dengan jumlah santri, berat, dan pakaian di database. Uji periode yang menghasilkan lebih dari 200 baris.
 - Uji akses foto dan pengaturan dari ketiga peran. Jika proyek memakai kebijakan restrictive lama atau RPC kustom, periksa juga kebijakan dan izin fungsi tersebut.
+
+## Perbarui menu HP saja
+
+Jika revisi SILAS sebelumnya sudah terpasang, ganti tiga file di GitHub Pages dengan versi dari paket ini: `sistem.html`, `styles.css`, dan `app.js`. Perubahan menu HP tidak memerlukan migrasi SQL tambahan.
